@@ -179,6 +179,7 @@ bool ABoard::CalcMove(FString Field, bool IsX)
             Board[tempValue[0]].Columns[tempValue[1]]->SetMaterial(0, OMaterial);
             Board[tempValue[0]].Columns[tempValue[1]]->ComponentTags.Add(FName("O"));
         }
+        CheckWin();
         return true;
     }
     else
@@ -188,6 +189,7 @@ bool ABoard::CalcMove(FString Field, bool IsX)
         {
             GEngine->AddOnScreenDebugMessage(3, 5.f, FColor::Cyan, FString(TEXT("ALREADY TAKEN")));
         }
+        CheckWin();
         return false;
     }
 }
@@ -222,7 +224,27 @@ TArray<FString> ABoard::GetTakenList()
 bool ABoard::CheckWin()
 {
     // To be implemented
-    return true;
+    bool IsWon = true;
+    for (int i = 0; i < Board.Num(); i++)
+    {
+
+        for (int j = 0; j < Board[i].Columns.Num(); j++)
+        {
+            IsWon = true;
+            if (Board[i][j]->ComponentHasTag("X") == false)
+            {
+                IsWon = false;
+                break;
+            }
+            if (Board[i][j]->ComponentHasTag("O") == false)
+            {
+                IsWon = false;
+                break;
+            }
+        }
+    }
+    UE_LOG(LogTemp, Warning, TEXT("%s"), IsWon ? TEXT("true") : TEXT("false"));
+    return false;
 }
 
 void ABoard::TestRow()
