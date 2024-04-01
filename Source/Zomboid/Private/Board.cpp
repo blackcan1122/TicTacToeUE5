@@ -1,4 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
+//TEST
 
 #include "Board.h"
 #include "MyStructs.h"
