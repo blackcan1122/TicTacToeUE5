@@ -27,6 +27,10 @@ void ABoard::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Initializing the Playboard by Cleaning the Current Board, Creating and naming the Components and Register them to the 2D Array
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABoard::InitPlayboard()
 {
     // Clean up any existing components
@@ -84,6 +88,9 @@ void ABoard::InitPlayboard()
     MarkComponentsRenderStateDirty();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Completly Destroys all components and also emptying the Board Array
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABoard::CleanComponents(TArray<FRows>& Boardinput)
 {
     // Iterate over each row
@@ -116,7 +123,9 @@ void ABoard::CleanComponents(TArray<FRows>& Boardinput)
     // Clear the board array
     Boardinput.Empty();
 }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Parsing a String like (2,1) into two integers 2 and 1 !IMPORTANT! There are misbehaviors with field greater than 9 columns and rows 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TArray<int> ABoard::ParseInputMove(FString Field)
 {
     if (GEngine)
@@ -156,7 +165,9 @@ TArray<int> ABoard::ParseInputMove(FString Field)
     returnArray.Add(Value2);
     return returnArray;
 }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Sets the input as a Move, Checks if the Move was Valid, Adds it a List of all Taken Moves, Changes Material Depending on if its X or Oand Checks if someone Won
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ABoard::CalcMove(FString Field, bool IsX)
 {
     // Check if the move is valid
@@ -184,7 +195,7 @@ bool ABoard::CalcMove(FString Field, bool IsX)
     }
     else
     {
-        // Print error message if move is already taken
+        // Print error message if move is already taken and also Returns False, so the other Player (either Player or Enemy cant do another turn
         if (GEngine)
         {
             GEngine->AddOnScreenDebugMessage(3, 5.f, FColor::Cyan, FString(TEXT("ALREADY TAKEN")));
@@ -193,7 +204,9 @@ bool ABoard::CalcMove(FString Field, bool IsX)
         return false;
     }
 }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Checks if the Move made is not already taken
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ABoard::validateMove(FString Field)
 {
     // Check if the move is not already taken
@@ -209,27 +222,44 @@ bool ABoard::validateMove(FString Field)
     }
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// simple Return to get the current Board
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TArray<FRows> ABoard::getBoard()
 {
     // Return the board array
     return Board;
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// simple Return to get the current TakenList
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TArray<FString> ABoard::GetTakenList()
 {
     // Return the list of taken moves
     return takenListFull;
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Win Condition for X and O 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function should be changed to Return type Enum or Int to Differentiate between the 3 Possible States (X Win, O Win, Tie)
 bool ABoard::CheckWin()
 {
     bool IsWon = false;
 
-    // Checking Every Row (Can be Extended with a Variable instead of Hardcoding 3 as a Win Condition
+
+    
 
     int XCounter = 0;
     int OCounter = 0;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Checking Every Row (Can be Extended with a Variable instead of Hardcoding 3 as a Win Condition)
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Goes through every Row and checks every Cell of this Row if it contains A X or A O -> Will Count Upwards for every Row to see if it Contains 3
     for (int i = 0; i < Board.Num(); i++)
@@ -241,39 +271,160 @@ bool ABoard::CheckWin()
         // Jede Zelle von jeder Reihe
         for (int j = 0; j < Board[i].Columns.Num(); j++)
         {
-
-            
             if (Board[i][j]->ComponentHasTag(FName("X")) == true)
             {
                 XCounter++;
-                UE_LOG(LogTemp, Warning, TEXT("X Tag Was Found YAAAY"));
             }
             if (Board[i][j]->ComponentHasTag(FName("O")) == true)
             {
                 OCounter++;
-                UE_LOG(LogTemp, Warning, TEXT("O Tag Was Found YAAAY"));
             }
         }
-
-        UE_LOG(LogTemp, Warning, TEXT("The XCounter for Row: %i is: %i"), i, XCounter);
-
+        // Checking if Someone Won
         if (XCounter == 3)
         {
-            // X Win Condition 
+            // X Wins
             IsWon = true;
             UE_LOG(LogTemp, Warning, TEXT("X Won"));
             return true;
         }
         if (OCounter == 3)
         {
+            // O Wins
             IsWon = true;
             UE_LOG(LogTemp, Warning, TEXT("O Won"));
             return true;
         }
     }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Checking Every Column (Can be Extended with a Variable instead of Hardcoding 3 as a Win Condition)
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Checking Every Column and Assuming every Row has the same Amount of Columns (Grid)
+    for (int j = 0; j < Board[0].Columns.Num(); j++)
+    {
+        // Resetting The Counter for every Column
+        XCounter = 0;
+        OCounter = 0;
+
+        // Jede Zelle von jeder Spalte
+        for (int i = 0; i < Board.Num(); i++)
+        {
+            if (Board[i][j]->ComponentHasTag(FName("X")))
+            {
+                XCounter++;
+            }
+            if (Board[i][j]->ComponentHasTag(FName("O")))
+            {
+                OCounter++;
+            }
+        }
+
+        if (XCounter == 3)
+        {
+            // X Wins
+            IsWon = true;
+            UE_LOG(LogTemp, Warning, TEXT("X Won"));
+            return true;
+        }
+        if (OCounter == 3)
+        {
+            // O Wins
+            IsWon = true;
+            UE_LOG(LogTemp, Warning, TEXT("O Won"));
+            return true;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Checking Diagonal Lines (Can be Extended with a Variable instead of Hardcoding 3 as a Win Condition)
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Resetting the Counter before Checking Diagonal Lines !IMPORTANT! I am assuming that every Playboard is a Square, should throw out of Bound Exception when not!
+    XCounter = 0;
+    OCounter = 0;
+
+    // Going through every Row and using the Current Index for the Current Columns (0,0 ; 1,1 ; 2,2)
+    for (int i = 0; i < Board.Num(); i++)
+    {
+        if (Board[i][i]->ComponentHasTag(FName("X")))
+        {
+            XCounter++;
+        }
+        if (Board[i][i]->ComponentHasTag(FName("O")))
+        {
+            OCounter++;
+        }
+    }
+
+    if (XCounter == 3)
+    {
+        // X Wins
+        IsWon = true;
+        UE_LOG(LogTemp, Warning, TEXT("X Won"));
+        return true;
+    }
+    if (OCounter == 3)
+    {
+        // O Wins
+        IsWon = true;
+        UE_LOG(LogTemp, Warning, TEXT("O Won"));
+        return true;
+    }
+
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Checking Anti Diagonal Lines (Can be Extended with a Variable instead of Hardcoding 3 as a Win Condition)
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+    // Resetting the Counter before Checking Diagonal Lines !IMPORTANT! I am assuming that every Playboard is a Square, should throw out of Bound Exception when not!
+    XCounter = 0;
+    OCounter = 0;
+
+    // Going through every Row and using the Current Index for the Row
+    // for the Columns using the Size of the Array - 1 (Cause Array starts at 0) and subtracting the index from it (0,2; 1,1; 2,0)
+
+    for (int i = 0; i < Board.Num(); i++)
+    {
+
+        if (Board[i][Board.Num() - 1 - i]->ComponentHasTag(FName("X")))
+        {
+            XCounter++;
+        }
+        if (Board[i][Board.Num() - 1 - i]->ComponentHasTag(FName("O")))
+        {
+            OCounter++;
+        }
+
+    }
+
+    if (XCounter == 3)
+    {
+        // X Wins
+        IsWon = true;
+        UE_LOG(LogTemp, Warning, TEXT("X Won"));
+        return true;
+    }
+    if (OCounter == 3)
+    {
+        // O Wins
+        IsWon = true;
+        UE_LOG(LogTemp, Warning, TEXT("O Won"));
+        return true;
+    }
+
+
+
+    // No One Won
     return false;
 }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Debug Function to visualize a specific Cell
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABoard::TestRow()
 {
     // Test function to set material for a specific row and column
