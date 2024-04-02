@@ -221,29 +221,56 @@ TArray<FString> ABoard::GetTakenList()
     return takenListFull;
 }
 
+// Function should be changed to Return type Enum or Int to Differentiate between the 3 Possible States (X Win, O Win, Tie)
 bool ABoard::CheckWin()
 {
-    // To be implemented
-    bool IsWon = true;
+    bool IsWon = false;
+
+    // Checking Every Row (Can be Extended with a Variable instead of Hardcoding 3 as a Win Condition
+
+    int XCounter = 0;
+    int OCounter = 0;
+
+    // Goes through every Row and checks every Cell of this Row if it contains A X or A O -> Will Count Upwards for every Row to see if it Contains 3
     for (int i = 0; i < Board.Num(); i++)
     {
+        // Resetting The Counter for every Row
+        XCounter = 0;
+        OCounter = 0;
 
+        // Jede Zelle von jeder Reihe
         for (int j = 0; j < Board[i].Columns.Num(); j++)
         {
-            IsWon = true;
-            if (Board[i][j]->ComponentHasTag("X") == false)
+
+            
+            if (Board[i][j]->ComponentHasTag(FName("X")) == true)
             {
-                IsWon = false;
-                break;
+                XCounter++;
+                UE_LOG(LogTemp, Warning, TEXT("X Tag Was Found YAAAY"));
             }
-            if (Board[i][j]->ComponentHasTag("O") == false)
+            if (Board[i][j]->ComponentHasTag(FName("O")) == true)
             {
-                IsWon = false;
-                break;
+                OCounter++;
+                UE_LOG(LogTemp, Warning, TEXT("O Tag Was Found YAAAY"));
             }
         }
+
+        UE_LOG(LogTemp, Warning, TEXT("The XCounter for Row: %i is: %i"), i, XCounter);
+
+        if (XCounter == 3)
+        {
+            // X Win Condition 
+            IsWon = true;
+            UE_LOG(LogTemp, Warning, TEXT("X Won"));
+            return true;
+        }
+        if (OCounter == 3)
+        {
+            IsWon = true;
+            UE_LOG(LogTemp, Warning, TEXT("O Won"));
+            return true;
+        }
     }
-    UE_LOG(LogTemp, Warning, TEXT("%s"), IsWon ? TEXT("true") : TEXT("false"));
     return false;
 }
 
