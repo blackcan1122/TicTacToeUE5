@@ -33,6 +33,9 @@ void ABoard::Tick(float DeltaTime)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABoard::InitPlayboard()
 {
+
+    float CenteringOffsetRow = (Board.Num() * 100) / 2;
+    float CenteringOffsetColumn = (Board[0].Columns.Num() * 100) / 2;
     // Clean up any existing components
     CleanComponents(Board);
 
@@ -46,15 +49,16 @@ void ABoard::InitPlayboard()
         Board[i].Columns.SetNum(AmountOfColumns);
 
         // Calculate the offset for the current row
+
         FVector RowsOffset = FVector(0, 0, 0);
-        RowsOffset.Z = 100 * (i + 1);
+        RowsOffset.Z = (100 * (i + 1)) - CenteringOffsetRow - 50.f;
 
         // Iterate over each column in the current row
         for (int j = 0; j < Board[i].Columns.Num(); j++)
         {
             // Calculate the offset for the current column
             FVector ColumnOffset = FVector(0, 0, 0);
-            ColumnOffset.X = 100 * (j + 1);
+            ColumnOffset.X = (100 * (j + 1)) - CenteringOffsetColumn - 50.f;
 
             // Generate a unique name for the component
             FString ComponentName = FString::Printf(TEXT("%d,%d"), i, j);
