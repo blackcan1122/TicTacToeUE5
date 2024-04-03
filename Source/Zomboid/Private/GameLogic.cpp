@@ -82,13 +82,20 @@ void AGameLogic::ProcessInput(FString Field)
 			// Will be Executed when its the Players Turn
 			if (BoardReference)
 			{
-				IsSucess = BoardReference->CalcMove(Field, true);
-			}
+				IsSucess = BoardReference->CalcMove(Field, true); // Move Ausgeführt
+				int CurrentStateOfBoard = BoardReference->CheckWin();
+				if (CurrentStateOfBoard == -1 || CurrentStateOfBoard == 1 || CurrentStateOfBoard == 0) // Spiel ist beendet
+				{
+					setActivePlayer(false);
+					setActiveEnemy(false);
+					return;				
+				}
+				if (IsSucess)
+				{
+					setActivePlayer(false);
+					setActiveEnemy(true);
+				}
 
-			if (IsSucess)
-			{
-				setActivePlayer(false);
-				setActiveEnemy(true);
 			}
 
 			//Or Calling the Enemy Function inside the Players Block?
@@ -101,6 +108,13 @@ void AGameLogic::ProcessInput(FString Field)
 			if (BoardReference)
 			{
 				BoardReference->CalcMove(EnemyReference->MakeAIMove(), false);
+			}
+			int CurrentStateOfBoard = BoardReference->CheckWin();
+			if (CurrentStateOfBoard == -1 || CurrentStateOfBoard == 1 || CurrentStateOfBoard == 0)
+			{
+				setActivePlayer(false);
+				setActiveEnemy(false);
+				return;
 			}
 			setActiveEnemy(false);
 			setActivePlayer(true);

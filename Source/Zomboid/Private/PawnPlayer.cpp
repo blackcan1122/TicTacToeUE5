@@ -74,26 +74,21 @@ void APawnPlayer::ReceiveGameLogicRef(AGameLogic* GameLogic)
 FString APawnPlayer::MakeAIMove()
 {
 	
-	int* ColNum = &(BoardReference->AmountOfColumns);
-	int* RowNum = &(BoardReference->AmountOfRows);
+	int ColNum = BoardReference->AmountOfColumns;
+	int RowNum = BoardReference->AmountOfRows;
+	int TakenSpace = BoardReference->GetTakenList().Num();
 
 	bool isValid = false;
-	int Trycount = 0;
-	FString ResultString;
-
-	while (!isValid)
+	FString ResultString = "0,0";
+	while (TakenSpace <= ColNum*RowNum && isValid == false)
 	{
-		int RandomRowNumber = FMath::RandRange(0, *RowNum - 1);
-		int RandomColNumber = FMath::RandRange(0, *ColNum - 1);
+		int RandomRowNumber = FMath::RandRange(0, RowNum - 1);
+		int RandomColNumber = FMath::RandRange(0, ColNum - 1);
+		UE_LOG(LogTemp, Warning, TEXT("I AM IN A WHILE LOOP WOOOHOOO"));
 
 		ResultString = FString::Printf(TEXT("%d,%d"), RandomRowNumber, RandomColNumber);
 
 		isValid = BoardReference->validateMove(ResultString);
-		Trycount++;
-		if (Trycount > 30)
-		{
-			break;
-		}
 	}
 
 	return ResultString;

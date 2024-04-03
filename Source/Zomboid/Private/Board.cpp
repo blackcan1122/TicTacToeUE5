@@ -178,7 +178,7 @@ bool ABoard::CalcMove(FString Field, bool IsX)
     if (validateMove(Field))
     {
         // Add the move to the taken list
-        takenListFull.Add(Field);
+        takenListFull.AddUnique(Field);
 
         // Parse the input field to get row and column indices
         TArray<int> tempValue = ParseInputMove(Field);
@@ -194,7 +194,6 @@ bool ABoard::CalcMove(FString Field, bool IsX)
             Board[tempValue[0]].Columns[tempValue[1]]->SetMaterial(0, OMaterial);
             Board[tempValue[0]].Columns[tempValue[1]]->ComponentTags.Add(FName("O"));
         }
-        CheckWin();
         return true;
     }
     else
@@ -204,7 +203,6 @@ bool ABoard::CalcMove(FString Field, bool IsX)
         {
             GEngine->AddOnScreenDebugMessage(3, 5.f, FColor::Cyan, FString(TEXT("ALREADY TAKEN")));
         }
-        CheckWin();
         return false;
     }
 }
@@ -420,9 +418,13 @@ int ABoard::CheckWin()
         UE_LOG(LogTemp, Warning, TEXT("O Won"));
         return -1;
     }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Tie Condition
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    if (IsWon == false || takenListFull.Num() == AmountOfRows * AmountOfColumns)
+    if (IsWon == false && takenListFull.Num() == AmountOfRows * AmountOfColumns)
     {
+        UE_LOG(LogTemp, Warning, TEXT("Taken List Full is: %i"), takenListFull.Num());
         UE_LOG(LogTemp, Warning, TEXT("Its a TIE!"));
         return 0;
     }

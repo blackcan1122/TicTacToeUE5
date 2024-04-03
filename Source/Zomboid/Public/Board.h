@@ -61,7 +61,6 @@ private:
 	UPROPERTY()
 	USceneComponent* MyRoot;
 
-	TArray<FString> takenListFull;
 
 	bool lastMoveByPlayer;
 
@@ -87,4 +86,7 @@ public:
 
 	UFUNCTION(CallInEditor)
 	void TestRow();
+
+	UPROPERTY(VisibleAnywhere);
+	TArray<FString> takenListFull;
 };
