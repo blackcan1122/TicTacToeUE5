@@ -83,7 +83,7 @@ public:
 	TArray<FString> GetTakenList();
 
 	UFUNCTION()
-	bool CheckWin();
+	int CheckWin();
 
 	UFUNCTION(CallInEditor)
 	void TestRow();

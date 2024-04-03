@@ -250,8 +250,8 @@ TArray<FString> ABoard::GetTakenList()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Win Condition for X and O 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Function should be changed to Return type Enum or Int to Differentiate between the 3 Possible States (X Win, O Win, Tie)
-bool ABoard::CheckWin()
+// Function should be changed to Return type Enum or Int to Differentiate between the 3 Possible States (X:1  Win, O:-1 Win, Tie:0 and keep Running is 2 )
+int ABoard::CheckWin()
 {
     bool IsWon = false;
 
@@ -290,14 +290,14 @@ bool ABoard::CheckWin()
             // X Wins
             IsWon = true;
             UE_LOG(LogTemp, Warning, TEXT("X Won"));
-            return true;
+            return 1;
         }
         if (OCounter == 3)
         {
             // O Wins
             IsWon = true;
             UE_LOG(LogTemp, Warning, TEXT("O Won"));
-            return true;
+            return -1;
         }
     }
 
@@ -331,14 +331,14 @@ bool ABoard::CheckWin()
             // X Wins
             IsWon = true;
             UE_LOG(LogTemp, Warning, TEXT("X Won"));
-            return true;
+            return 1;
         }
         if (OCounter == 3)
         {
             // O Wins
             IsWon = true;
             UE_LOG(LogTemp, Warning, TEXT("O Won"));
-            return true;
+            return -1;
         }
     }
 
@@ -368,14 +368,14 @@ bool ABoard::CheckWin()
         // X Wins
         IsWon = true;
         UE_LOG(LogTemp, Warning, TEXT("X Won"));
-        return true;
+        return 1;
     }
     if (OCounter == 3)
     {
         // O Wins
         IsWon = true;
         UE_LOG(LogTemp, Warning, TEXT("O Won"));
-        return true;
+        return -1;
     }
 
 
@@ -411,20 +411,25 @@ bool ABoard::CheckWin()
         // X Wins
         IsWon = true;
         UE_LOG(LogTemp, Warning, TEXT("X Won"));
-        return true;
+        return 1;
     }
     if (OCounter == 3)
     {
         // O Wins
         IsWon = true;
         UE_LOG(LogTemp, Warning, TEXT("O Won"));
-        return true;
+        return -1;
+    }
+
+    if (IsWon == false || takenListFull.Num() == AmountOfRows * AmountOfColumns)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Its a TIE!"));
+        return 0;
     }
 
 
-
-    // No One Won
-    return false;
+    // No One Won and Board not full
+    return 2;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Debug Function to visualize a specific Cell
