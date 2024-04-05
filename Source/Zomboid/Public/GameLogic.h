@@ -6,7 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "Board.h"
 #include "Kismet/GameplayStatics.h"
+#include "Delegates/MulticastDelegateBase.h"
 #include "GameLogic.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiDispatcher, int, WhoWon);
 
 class APawnPlayer;
 
@@ -21,6 +24,9 @@ public:
 
 	UFUNCTION()
 	void ProcessInput(FString Field);
+
+	UPROPERTY(BlueprintAssignable, Category = "Multi GameLogic Dispatcher")
+	FMultiDispatcher MultiDispatcher;
 
 protected:
 
@@ -43,6 +49,9 @@ protected:
 	void setActiveEnemy(bool SetIsTurn);
 	// Protected Member Attributes
 
+	UFUNCTION(BlueprintCallable)
+	void ResetBoardForNewGame();
+
 
 	// References to other Relevant Actors
 	UPROPERTY(BlueprintReadOnly)
@@ -55,6 +64,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
 
 private:
 

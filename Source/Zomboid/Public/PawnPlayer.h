@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Math/UnrealMathUtility.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -41,7 +42,13 @@ public:
 	bool IsX = true;
 
 	UFUNCTION()
-	FString MakeAIMove();
+	FString MakeEasyAIMove();
+
+	UFUNCTION()
+	FString MakeExtremeAIMove(TArray<FRows>& Currentboard);
+
+	UFUNCTION()
+	int minimax(TArray<FRows>& Board, int depth, int alpha, int beta, bool isMaximazing);
 
 protected:
 	// Called when the game starts or when spawned

@@ -88,6 +88,7 @@ void AGameLogic::ProcessInput(FString Field)
 				{
 					setActivePlayer(false);
 					setActiveEnemy(false);
+					MultiDispatcher.Broadcast(CurrentStateOfBoard);
 					return;				
 				}
 				if (IsSucess)
@@ -107,13 +108,14 @@ void AGameLogic::ProcessInput(FString Field)
 			// Will be Executed when its the Enemy Turn
 			if (BoardReference)
 			{
-				BoardReference->CalcMove(EnemyReference->MakeAIMove(), false);
+				BoardReference->CalcMove(EnemyReference->MakeEasyAIMove(), false);
 			}
 			int CurrentStateOfBoard = BoardReference->CheckWin();
 			if (CurrentStateOfBoard == -1 || CurrentStateOfBoard == 1 || CurrentStateOfBoard == 0)
 			{
 				setActivePlayer(false);
 				setActiveEnemy(false);
+				MultiDispatcher.Broadcast(CurrentStateOfBoard);
 				return;
 			}
 			setActiveEnemy(false);
@@ -137,4 +139,11 @@ void AGameLogic::SendBoardReference()
 {
 	EnemyReference->ReceiveBoardRef(BoardReference);
 	PlayerReference->ReceiveBoardRef(BoardReference);
+}
+
+void AGameLogic::ResetBoardForNewGame()
+{
+	BoardReference->InitPlayboard();
+	setActivePlayer(true);
+	setActiveEnemy(false);
 }

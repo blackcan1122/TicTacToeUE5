@@ -41,14 +41,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UFUNCTION(CallInEditor, BlueprintCallable)
-	void InitPlayboard();
+	UFUNCTION()
+	void CleanComponents(TArray<FRows>& Boardinput);
 
-	void CleanComponents(TArray<FRows> &Boardinput);
+	UPROPERTY()
+	TArray<FString> SavedTakenList;
 
-	UFUNCTION(BlueprintCallable)
-	TArray<int> ParseInputMove(FString Field);
-	
+	UPROPERTY()
+	TArray<FRows> SavedBoard;
 
 
 private:
@@ -61,13 +61,19 @@ private:
 	UPROPERTY()
 	USceneComponent* MyRoot;
 
-
+	UPROPERTY()
 	bool lastMoveByPlayer;
 
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(CallInEditor, BlueprintCallable)
+	void InitPlayboard();
+
+	UFUNCTION(BlueprintCallable)
+	TArray<int> ParseInputMove(FString Field);
 
 	UFUNCTION(BlueprintCallable)
 	TArray<FRows> getBoard();
@@ -89,4 +95,17 @@ public:
 
 	UPROPERTY(VisibleAnywhere);
 	TArray<FString> takenListFull;
+
+	UFUNCTION()
+	void SaveBoard();
+
+	UFUNCTION()
+	void RestoreBoard();
+
+	UFUNCTION()
+	bool ValidInputAI(FString& input);
+
+	UFUNCTION()
+	void ResetLastMadeMove(FString& currentMove);
+
 };

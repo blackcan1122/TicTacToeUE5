@@ -125,6 +125,7 @@ void ABoard::CleanComponents(TArray<FRows>& Boardinput)
     }
 
     // Clear the board array
+    takenListFull.Empty();
     Boardinput.Empty();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -248,7 +249,7 @@ TArray<FString> ABoard::GetTakenList()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Win Condition for X and O 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Function should be changed to Return type Enum or Int to Differentiate between the 3 Possible States (X:1  Win, O:-1 Win, Tie:0 and keep Running is 2 )
+// Function should be changed to Return type Enum or Int to Differentiate between the 3 Possible States (X:1 Win, O:-1 Win, Tie:0 and keep Running is 2 )
 int ABoard::CheckWin()
 {
     bool IsWon = false;
@@ -440,4 +441,44 @@ void ABoard::TestRow()
 {
     // Test function to set material for a specific row and column
     Board[Rows].Columns[Columns]->SetMaterial(0, XMaterial);
+}
+
+
+void ABoard::SaveBoard()
+{
+    SavedBoard = Board;
+    SavedTakenList = takenListFull;
+}
+
+void ABoard::RestoreBoard()
+{
+    Board = SavedBoard;
+    takenListFull = SavedTakenList;
+}
+
+
+bool ABoard::ValidInputAI(FString& input)
+{
+    if (takenListFull.Contains(ParseInputMove(input)))
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+void ABoard::ResetLastMadeMove(FString& currentMove)
+{
+    if (takenListFull.Contains(currentMove))
+    {
+        takenListFull.Remove(currentMove);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("WARNING: couldnt remove AI Move from Taken List"));
+        return;
+    }
+
 }

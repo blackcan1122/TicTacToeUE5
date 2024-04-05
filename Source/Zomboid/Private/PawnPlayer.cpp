@@ -71,7 +71,7 @@ void APawnPlayer::ReceiveGameLogicRef(AGameLogic* GameLogic)
 	GameLogicReference = GameLogic;
 }
 
-FString APawnPlayer::MakeAIMove()
+FString APawnPlayer::MakeEasyAIMove()
 {
 	
 	int ColNum = BoardReference->AmountOfColumns;
@@ -92,6 +92,144 @@ FString APawnPlayer::MakeAIMove()
 	}
 
 	return ResultString;
+}
+
+FString APawnPlayer::MakeExtremeAIMove(TArray<FRows>& Currentboard)
+{
+    //loopCount = 0;  // Debug for Counting iterations
+
+    int BestScore = INT_MIN;
+    int CurrentScore;
+
+    FString BestMove;
+    FString CurrentMove;
+
+    //TArray<FString> strVRows = currentBoard.validRowsStr();    // Dynamic getting all valid Rows (A,B,C...) instead of hardcoding it for a bigger sized playboard
+    //TArray<FString> strVCols = currentBoard.validColStr();  // Dynamic getting all valid Rows (A,B,C...) instead of hardcoding it for a bigger sized playboard
+
+    // Variables for the Alpha - Beta Pruning optimization
+    int alpha = INT_MIN;
+    int beta = INT_MAX;
+
+    // Iterating through the 2D Vector (Playboard)
+    for (int i = 0; i < Currentboard.Num(); i++)
+    {
+        for (int j = 0; j < Currentboard.Num(); j++)
+        {
+            //loopCount++;
+            CurrentMove.Empty();
+            CurrentMove.AppendInt(i);
+            CurrentMove.Append(",");
+            CurrentMove.AppendInt(j);
+
+            //Validation if the field is already occupied
+            if (BoardReference -> ValidInputAI(CurrentMove) == true)
+            {
+                BoardReference->CalcMove(CurrentMove, false);   // Calling a own Function for Updating the Playboard without taking items to the Taken List
+                CurrentScore = minimax(Currentboard, 0, alpha, beta, false);    // Minimax Algorithm with alpha beta Pruning
+                BoardReference->ResetLastMadeMove(CurrentMove);           // Reset the Playboard in a way to function with the recursive behavior
+
+                if (CurrentScore > BestScore)
+                {
+                    BestScore = CurrentScore;
+                    BestMove = CurrentMove;
+                }
+
+            }
+        }
+
+    }
+    //std::cout << "Amount of Loops: " << loopCount << "\n";
+    return  BestMove;
+
+}
+
+int APawnPlayer::minimax(TArray<FRows>& Board, int depth, int alpha, int beta, bool isMaximazing)
+{
+
+    // Win Condition
+    int result = BoardReference->CheckWin();
+    if (result == -1 || result == 1)
+    {
+        return result;
+
+    }
+    else if (result == 0)
+    {
+        return result;
+    }
+
+    //
+    // Maximizing Player
+    //
+    else if (isMaximazing)
+    {
+        int BestScore = INT_MIN;
+        int CurrentScore;
+        FString CurrentMove;
+
+        // Iterating through the 2D Vector (Playboard)
+        for (int i = 0; i < Board.Num(); i++)
+        {
+            for (int j = 0; j < Board.Num(); j++)
+            {
+                CurrentMove.Empty();
+                CurrentMove.AppendInt(i);
+                CurrentMove.Append(",");
+                CurrentMove.AppendInt(j);
+
+                //Validation if the field is already occupied
+                if (BoardReference->ValidInputAI(CurrentMove) == true)
+                {
+                    BoardReference->CalcMove(CurrentMove, false);
+                    CurrentScore = minimax(Board, depth + 1, alpha, beta, false);
+                    BoardReference->ResetLastMadeMove(CurrentMove);
+
+                    BestScore = FMath::Max(CurrentScore, BestScore);
+                    alpha = FMath::Max(alpha, BestScore);
+                    if (beta <= alpha)
+                        break; // Beta cutoff
+                }
+            }
+        }
+        return BestScore;
+    }
+
+    //
+    // Minimizing Player
+    //
+    else
+    {
+        int BestScore = 2;
+        int CurrentScore;
+        FString CurrentMove;
+
+        // Iterating through the 2D Vector (Playboard)
+        for (int i = 0; i < Board.Num(); i++)
+        {
+            for (int j = 0; j < Board.Num(); j++)
+            {
+                CurrentMove.Empty();
+                CurrentMove.AppendInt(i);
+                CurrentMove.Append(",");
+                CurrentMove.AppendInt(j);
+
+                //Validation if the field is already occupied
+                if (BoardReference->ValidInputAI(CurrentMove) == true)
+                {
+                    BoardReference->CalcMove(CurrentMove, true);
+                    CurrentScore = minimax(Board, depth + 1, alpha, beta, true);
+                    BoardReference->ResetLastMadeMove(CurrentMove);
+
+                    BestScore = FMath::Min(CurrentScore, BestScore);
+                    beta = FMath::Min(beta, BestScore);
+                    if (beta <= alpha)
+                        break; // Alpha cutoff
+                }
+            }
+        }
+        return BestScore;
+    }
 }
 
 
