@@ -104,9 +104,6 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
     FString BestMove;
     FString CurrentMove;
 
-    //TArray<FString> strVRows = currentBoard.validRowsStr();    // Dynamic getting all valid Rows (A,B,C...) instead of hardcoding it for a bigger sized playboard
-    //TArray<FString> strVCols = currentBoard.validColStr();  // Dynamic getting all valid Rows (A,B,C...) instead of hardcoding it for a bigger sized playboard
-
     // Variables for the Alpha - Beta Pruning optimization
     int alpha = INT_MIN;
     int beta = INT_MAX;
@@ -125,7 +122,7 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
             //Validation if the field is already occupied
             if (BoardReference -> ValidInputAI(CurrentMove) == true)
             {
-                BoardReference->CalcMove(CurrentMove, false);   // Calling a own Function for Updating the Playboard without taking items to the Taken List
+                BoardReference->CalcMove(CurrentMove, false);  
                 CurrentScore = minimax(BoardReference->getBoard(), 0, alpha, beta, false);    // Minimax Algorithm with alpha beta Pruning
                 BoardReference->ResetLastMadeMove(CurrentMove);           // Reset the Playboard in a way to function with the recursive behavior
 
@@ -139,7 +136,6 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
         }
 
     }
-    //std::cout << "Amount of Loops: " << Loopcount << "\n";
     UE_LOG(LogTemp, Warning, TEXT("Amount of Loops are: %i"), Loopcount);
     return  BestMove;
 

@@ -35,6 +35,9 @@ public:
 	UMaterial* BaseMaterial;
 
 	UPROPERTY(EditAnywhere)
+	UMaterialInstance* TestMaterial;
+
+	UPROPERTY(EditAnywhere)
 	int Columns;
 
 	UPROPERTY(EditAnywhere)
