@@ -26,6 +26,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	float MySpringArmLength = 500;
 
+	UPROPERTY()
+	int Loopcount;
+
 	UFUNCTION()
 	void ReceiveGameLogicRef(AGameLogic* GameLogic);
 
@@ -45,10 +48,10 @@ public:
 	FString MakeEasyAIMove();
 
 	UFUNCTION()
-	FString MakeExtremeAIMove(TArray<FRows>& Currentboard);
+	FString MakeExtremeAIMove(TArray<FRows> Currentboard);
 
 	UFUNCTION()
-	int minimax(TArray<FRows>& Board, int depth, int alpha, int beta, bool isMaximazing);
+	int minimax(TArray<FRows> Board, int depth, int alpha, int beta, bool isMaximazing);
 
 protected:
 	// Called when the game starts or when spawned

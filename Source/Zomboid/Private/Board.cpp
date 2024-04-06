@@ -459,7 +459,7 @@ void ABoard::RestoreBoard()
 
 bool ABoard::ValidInputAI(FString& input)
 {
-    if (takenListFull.Contains(ParseInputMove(input)))
+    if (takenListFull.Contains(input) == true)
     {
         return false;
     }
@@ -473,7 +473,11 @@ void ABoard::ResetLastMadeMove(FString& currentMove)
 {
     if (takenListFull.Contains(currentMove))
     {
+        int i = ParseInputMove(currentMove)[0];
+        int j = ParseInputMove(currentMove)[1];
         takenListFull.Remove(currentMove);
+        Board[i][j]->ComponentTags.Empty();
+        Board[i][j]->SetMaterial(0, BaseMaterial);
     }
     else
     {

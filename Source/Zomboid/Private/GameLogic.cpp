@@ -108,7 +108,19 @@ void AGameLogic::ProcessInput(FString Field)
 			// Will be Executed when its the Enemy Turn
 			if (BoardReference)
 			{
-				BoardReference->CalcMove(EnemyReference->MakeEasyAIMove(), false);
+				if (HardMode == true)
+				{
+					FString NextMove;
+					BoardReference->SaveBoard();
+					NextMove = EnemyReference->MakeExtremeAIMove(BoardReference->getBoard());
+					BoardReference->RestoreBoard();
+					BoardReference->CalcMove(NextMove, false);
+					UE_LOG(LogTemp, Warning, TEXT("AI MADE: %s"), *NextMove);
+				}
+				else
+				{
+					BoardReference->CalcMove(EnemyReference->MakeEasyAIMove(), false);
+				}
 			}
 			int CurrentStateOfBoard = BoardReference->CheckWin();
 			if (CurrentStateOfBoard == -1 || CurrentStateOfBoard == 1 || CurrentStateOfBoard == 0)

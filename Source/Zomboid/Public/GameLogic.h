@@ -56,14 +56,21 @@ protected:
 	// References to other Relevant Actors
 	UPROPERTY(BlueprintReadOnly)
 	ABoard* BoardReference;
+
 	UPROPERTY(BlueprintReadOnly)
 	APawnPlayer* PlayerReference;
+
 	UPROPERTY(EditAnywhere)
 	APawnPlayer* EnemyReference;
+
+	UPROPERTY(EditAnywhere)
+	bool HardMode;
+
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
 
 
 private:

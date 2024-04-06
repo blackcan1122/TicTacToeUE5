@@ -94,9 +94,9 @@ FString APawnPlayer::MakeEasyAIMove()
 	return ResultString;
 }
 
-FString APawnPlayer::MakeExtremeAIMove(TArray<FRows>& Currentboard)
+FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
 {
-    //loopCount = 0;  // Debug for Counting iterations
+    Loopcount = 0;  // Debug for Counting iterations
 
     int BestScore = INT_MIN;
     int CurrentScore;
@@ -116,7 +116,7 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows>& Currentboard)
     {
         for (int j = 0; j < Currentboard.Num(); j++)
         {
-            //loopCount++;
+            Loopcount++;
             CurrentMove.Empty();
             CurrentMove.AppendInt(i);
             CurrentMove.Append(",");
@@ -126,7 +126,7 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows>& Currentboard)
             if (BoardReference -> ValidInputAI(CurrentMove) == true)
             {
                 BoardReference->CalcMove(CurrentMove, false);   // Calling a own Function for Updating the Playboard without taking items to the Taken List
-                CurrentScore = minimax(Currentboard, 0, alpha, beta, false);    // Minimax Algorithm with alpha beta Pruning
+                CurrentScore = minimax(BoardReference->getBoard(), 0, alpha, beta, false);    // Minimax Algorithm with alpha beta Pruning
                 BoardReference->ResetLastMadeMove(CurrentMove);           // Reset the Playboard in a way to function with the recursive behavior
 
                 if (CurrentScore > BestScore)
@@ -139,19 +139,21 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows>& Currentboard)
         }
 
     }
-    //std::cout << "Amount of Loops: " << loopCount << "\n";
+    //std::cout << "Amount of Loops: " << Loopcount << "\n";
+    UE_LOG(LogTemp, Warning, TEXT("Amount of Loops are: %i"), Loopcount);
     return  BestMove;
 
 }
 
-int APawnPlayer::minimax(TArray<FRows>& Board, int depth, int alpha, int beta, bool isMaximazing)
+int APawnPlayer::minimax(TArray<FRows> Board, int depth, int alpha, int beta, bool isMaximazing)
 {
 
     // Win Condition
+    TMap<int, int> score{ {-1,1},{0,0},{1,-1} };
     int result = BoardReference->CheckWin();
-    if (result == -1 || result == 1)
+    if (result == score[-1] || result == score[1])
     {
-        return result;
+        return score[result];
 
     }
     else if (result == 0)
@@ -164,6 +166,7 @@ int APawnPlayer::minimax(TArray<FRows>& Board, int depth, int alpha, int beta, b
     //
     else if (isMaximazing)
     {
+        Loopcount++;
         int BestScore = INT_MIN;
         int CurrentScore;
         FString CurrentMove;
@@ -182,7 +185,7 @@ int APawnPlayer::minimax(TArray<FRows>& Board, int depth, int alpha, int beta, b
                 if (BoardReference->ValidInputAI(CurrentMove) == true)
                 {
                     BoardReference->CalcMove(CurrentMove, false);
-                    CurrentScore = minimax(Board, depth + 1, alpha, beta, false);
+                    CurrentScore = minimax(BoardReference->getBoard(), depth + 1, alpha, beta, false);
                     BoardReference->ResetLastMadeMove(CurrentMove);
 
                     BestScore = FMath::Max(CurrentScore, BestScore);
@@ -200,6 +203,7 @@ int APawnPlayer::minimax(TArray<FRows>& Board, int depth, int alpha, int beta, b
     //
     else
     {
+        Loopcount++;
         int BestScore = 2;
         int CurrentScore;
         FString CurrentMove;
@@ -218,7 +222,7 @@ int APawnPlayer::minimax(TArray<FRows>& Board, int depth, int alpha, int beta, b
                 if (BoardReference->ValidInputAI(CurrentMove) == true)
                 {
                     BoardReference->CalcMove(CurrentMove, true);
-                    CurrentScore = minimax(Board, depth + 1, alpha, beta, true);
+                    CurrentScore = minimax(BoardReference->getBoard(), depth + 1, alpha, beta, true);
                     BoardReference->ResetLastMadeMove(CurrentMove);
 
                     BestScore = FMath::Min(CurrentScore, BestScore);

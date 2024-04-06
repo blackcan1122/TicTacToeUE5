@@ -32,6 +32,9 @@ public:
 	UMaterial* OMaterial;
 
 	UPROPERTY(EditAnywhere)
+	UMaterial* BaseMaterial;
+
+	UPROPERTY(EditAnywhere)
 	int Columns;
 
 	UPROPERTY(EditAnywhere)
@@ -55,8 +58,7 @@ private:
 
 	// Member Variablen
 
-	UPROPERTY()
-	TArray<FRows> Board;
+
 
 	UPROPERTY()
 	USceneComponent* MyRoot;
@@ -96,10 +98,10 @@ public:
 	UPROPERTY(VisibleAnywhere);
 	TArray<FString> takenListFull;
 
-	UFUNCTION()
+	UFUNCTION(CallInEditor)
 	void SaveBoard();
 
-	UFUNCTION()
+	UFUNCTION(CallInEditor)
 	void RestoreBoard();
 
 	UFUNCTION()
@@ -107,5 +109,8 @@ public:
 
 	UFUNCTION()
 	void ResetLastMadeMove(FString& currentMove);
+
+	UPROPERTY()
+	TArray<FRows> Board;
 
 };
