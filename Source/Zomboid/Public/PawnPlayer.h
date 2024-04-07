@@ -41,9 +41,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetIsTurn();
 
-	UPROPERTY(EditAnywhere)
-	bool IsX = true;
-
 	UFUNCTION()
 	FString MakeEasyAIMove();
 

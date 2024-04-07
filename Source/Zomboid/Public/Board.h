@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Math/UnrealMathUtility.h"
 #include "GameFramework/Actor.h"
 #include "MyStructs.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/TimelineComponent.h"
 #include "Board.generated.h"
 
 
@@ -26,22 +28,34 @@ public:
 	int AmountOfRows = 3;
 
 	UPROPERTY(EditAnywhere)
-	UMaterial* XMaterial;
+	UMaterialInstance* XMaterial;
 
 	UPROPERTY(EditAnywhere)
-	UMaterial* OMaterial;
+	UMaterialInstance* OMaterial;
 
 	UPROPERTY(EditAnywhere)
-	UMaterial* BaseMaterial;
+	UMaterialInstance* BaseMaterial;
 
 	UPROPERTY(EditAnywhere)
-	UMaterialInstance* TestMaterial;
+	UStaticMesh* BaseObject;
+
+	UPROPERTY(EditAnywhere)
+	UStaticMesh* XOBject;
+
+	UPROPERTY(EditAnywhere)
+	UStaticMesh* OOBject;
 
 	UPROPERTY(EditAnywhere)
 	int Columns;
 
 	UPROPERTY(EditAnywhere)
 	int Rows;
+
+	UPROPERTY()
+	TArray<FString> SavedTakenList;
+
+	UFUNCTION()
+	float TurnCubeOverTime(float Value1);
 
 protected:
 	// Called when the game starts or when spawned
@@ -51,17 +65,17 @@ protected:
 	void CleanComponents(TArray<FRows>& Boardinput);
 
 	UPROPERTY()
-	TArray<FString> SavedTakenList;
-
-	UPROPERTY()
 	TArray<FRows> SavedBoard;
 
+	UPROPERTY()
+	FTimeline MyTimeline;
+
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* MyFloatCurve;
 
 private:
 
 	// Member Variablen
-
-
 
 	UPROPERTY()
 	USceneComponent* MyRoot;
@@ -84,7 +98,7 @@ public:
 	TArray<FRows> getBoard();
 
 	UFUNCTION(BlueprintCallable)
-	bool CalcMove(FString Field, bool isX);
+	bool CalcMove(FString Field, bool IsX, bool IsSimulate);
 
 	UFUNCTION(BlueprintCallable)
 	bool validateMove(FString Field);

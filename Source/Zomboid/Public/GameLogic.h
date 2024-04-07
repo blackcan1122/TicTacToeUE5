@@ -63,15 +63,15 @@ protected:
 	UPROPERTY(EditAnywhere)
 	APawnPlayer* EnemyReference;
 
-	UPROPERTY(EditAnywhere)
-	bool HardMode;
+
 
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool HardMode;
 
 private:
 

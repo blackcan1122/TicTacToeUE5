@@ -82,7 +82,7 @@ void AGameLogic::ProcessInput(FString Field)
 			// Will be Executed when its the Players Turn
 			if (BoardReference)
 			{
-				IsSucess = BoardReference->CalcMove(Field, true); // Move Ausgeführt
+				IsSucess = BoardReference->CalcMove(Field, true, false); // Move Ausgeführt
 				int CurrentStateOfBoard = BoardReference->CheckWin();
 				if (CurrentStateOfBoard == -1 || CurrentStateOfBoard == 1 || CurrentStateOfBoard == 0) // Spiel ist beendet
 				{
@@ -114,12 +114,12 @@ void AGameLogic::ProcessInput(FString Field)
 					BoardReference->SaveBoard();
 					NextMove = EnemyReference->MakeExtremeAIMove(BoardReference->getBoard());
 					BoardReference->RestoreBoard();
-					BoardReference->CalcMove(NextMove, false);
+					BoardReference->CalcMove(NextMove, false, false);
 					UE_LOG(LogTemp, Warning, TEXT("AI MADE: %s"), *NextMove);
 				}
 				else
 				{
-					BoardReference->CalcMove(EnemyReference->MakeEasyAIMove(), false);
+					BoardReference->CalcMove(EnemyReference->MakeEasyAIMove(), false,false);
 				}
 			}
 			int CurrentStateOfBoard = BoardReference->CheckWin();

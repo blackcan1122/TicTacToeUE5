@@ -10,16 +10,18 @@ APawnPlayer::APawnPlayer()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	MySpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	MySpringArm->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+    MySpringArm->SetupAttachment(RootComponent);
 	MySpringArm->TargetArmLength = MySpringArmLength;
 
 	MyCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MainCam"));
-	MyCamera->AttachToComponent(MySpringArm, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+    MyCamera->SetupAttachment(MySpringArm);
 
 
 }
 
 // Called when the game starts or when spawned
+
+
 void APawnPlayer::BeginPlay()
 {
 	Super::BeginPlay();
@@ -84,7 +86,7 @@ FString APawnPlayer::MakeEasyAIMove()
 	{
 		int RandomRowNumber = FMath::RandRange(0, RowNum - 1);
 		int RandomColNumber = FMath::RandRange(0, ColNum - 1);
-		UE_LOG(LogTemp, Warning, TEXT("I AM IN A WHILE LOOP WOOOHOOO"));
+		//UE_LOG(LogTemp, Warning, TEXT("I AM IN A WHILE LOOP WOOOHOOO"));
 
 		ResultString = FString::Printf(TEXT("%d,%d"), RandomRowNumber, RandomColNumber);
 
@@ -108,6 +110,13 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
     int alpha = INT_MIN;
     int beta = INT_MAX;
 
+    // For First AI Move making a Random Decision to keep iterations small and keeping the Game Random
+    if (BoardReference->GetTakenList().Num() <= 2)
+    {
+        //UE_LOG(LogTemp, Warning, TEXT("Making Easy Move for First Move hahahaha"));
+        return MakeEasyAIMove();
+    }
+
     // Iterating through the 2D Vector (Playboard)
     for (int i = 0; i < Currentboard.Num(); i++)
     {
@@ -118,11 +127,10 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
             CurrentMove.AppendInt(i);
             CurrentMove.Append(",");
             CurrentMove.AppendInt(j);
-
             //Validation if the field is already occupied
             if (BoardReference -> ValidInputAI(CurrentMove) == true)
             {
-                BoardReference->CalcMove(CurrentMove, false);  
+                BoardReference->CalcMove(CurrentMove, false, true);  
                 CurrentScore = minimax(BoardReference->getBoard(), 0, alpha, beta, false);    // Minimax Algorithm with alpha beta Pruning
                 BoardReference->ResetLastMadeMove(CurrentMove);           // Reset the Playboard in a way to function with the recursive behavior
 
@@ -136,7 +144,7 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
         }
 
     }
-    UE_LOG(LogTemp, Warning, TEXT("Amount of Loops are: %i"), Loopcount);
+    //UE_LOG(LogTemp, Warning, TEXT("Amount of Loops are: %i"), Loopcount);
     return  BestMove;
 
 }
@@ -144,7 +152,7 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
 int APawnPlayer::minimax(TArray<FRows> Board, int depth, int alpha, int beta, bool isMaximazing)
 {
 
-    // Win Condition
+     //Win Condition
     TMap<int, int> score{ {-1,1},{0,0},{1,-1} };
     int result = BoardReference->CheckWin();
     if (result == score[-1] || result == score[1])
@@ -180,7 +188,7 @@ int APawnPlayer::minimax(TArray<FRows> Board, int depth, int alpha, int beta, bo
                 //Validation if the field is already occupied
                 if (BoardReference->ValidInputAI(CurrentMove) == true)
                 {
-                    BoardReference->CalcMove(CurrentMove, false);
+                    BoardReference->CalcMove(CurrentMove, false, true);
                     CurrentScore = minimax(BoardReference->getBoard(), depth + 1, alpha, beta, false);
                     BoardReference->ResetLastMadeMove(CurrentMove);
 
@@ -217,7 +225,7 @@ int APawnPlayer::minimax(TArray<FRows> Board, int depth, int alpha, int beta, bo
                 //Validation if the field is already occupied
                 if (BoardReference->ValidInputAI(CurrentMove) == true)
                 {
-                    BoardReference->CalcMove(CurrentMove, true);
+                    BoardReference->CalcMove(CurrentMove, true, true);
                     CurrentScore = minimax(BoardReference->getBoard(), depth + 1, alpha, beta, true);
                     BoardReference->ResetLastMadeMove(CurrentMove);
 

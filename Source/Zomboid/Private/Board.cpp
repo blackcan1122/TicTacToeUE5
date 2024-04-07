@@ -25,6 +25,7 @@ void ABoard::BeginPlay()
 void ABoard::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
 }
 
 
@@ -33,9 +34,8 @@ void ABoard::Tick(float DeltaTime)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABoard::InitPlayboard()
 {
-
-    float CenteringOffsetRow = (Board.Num() * 100) / 2;
-    float CenteringOffsetColumn = (Board[0].Columns.Num() * 100) / 2;
+    float CenteringOffsetRow = (AmountOfRows * 100) / 2;
+    float CenteringOffsetColumn = (AmountOfColumns * 100) / 2;
     // Clean up any existing components
     CleanComponents(Board);
 
@@ -43,6 +43,10 @@ void ABoard::InitPlayboard()
     Board.SetNum(AmountOfRows);
 
     // Iterate over each row
+    if (AmountOfRows == 0 || AmountOfColumns == 0)
+    {
+        return;
+    }
     for (int i = 0; i < Board.Num(); i++)
     {
         // Resize the columns array for the current row
@@ -65,25 +69,23 @@ void ABoard::InitPlayboard()
 
             // Create a new static mesh component
             UStaticMeshComponent* NewComponent = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), *ComponentName);
-            if (NewComponent)
+            if (NewComponent && GetWorld())
             {
                 // Register and add the new component
                 NewComponent->RegisterComponent();
                 AddInstanceComponent(NewComponent);
                 NewComponent->AttachToComponent(MyRoot, FAttachmentTransformRules::KeepRelativeTransform);
 
-                // Load the static mesh for the component
-                UStaticMesh* Cube = LoadObject<UStaticMesh>(this, TEXT("/Game/LevelPrototyping/Meshes/SM_ChamferCube.SM_ChamferCube"));
-
                 // Set the static mesh and location for the component
-                NewComponent->SetStaticMesh(Cube);
+                NewComponent->SetStaticMesh(BaseObject);
+                NewComponent->SetMaterial(0, BaseMaterial);
                 NewComponent->SetRelativeLocation(RowsOffset + ColumnOffset);
 
                 // Store the created component in the board array
                 Board[i].Columns[j] = NewComponent;
 
                 // Log the name of the created component
-                UE_LOG(LogTemp, Warning, TEXT("Component Name: %s"), *Board[i].Columns[j]->GetName());
+                //UE_LOG(LogTemp, Warning, TEXT("Component Name: %s"), *Board[i].Columns[j]->GetName());
             }
         }
     }
@@ -98,6 +100,10 @@ void ABoard::InitPlayboard()
 void ABoard::CleanComponents(TArray<FRows>& Boardinput)
 {
     // Iterate over each row
+    if (Boardinput.Num() == 0)
+    {
+        return;
+    }
     for (int i = 0; i < Boardinput.Num(); i++)
     {
         // Iterate over each column in the current row
@@ -128,6 +134,7 @@ void ABoard::CleanComponents(TArray<FRows>& Boardinput)
     takenListFull.Empty();
     Boardinput.Empty();
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Parsing a String like (2,1) into two integers 2 and 1 !IMPORTANT! There are misbehaviors with field greater than 9 columns and rows 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,10 +177,11 @@ TArray<int> ABoard::ParseInputMove(FString Field)
     returnArray.Add(Value2);
     return returnArray;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Sets the input as a Move, Checks if the Move was Valid, Adds it a List of all Taken Moves, Changes Material Depending on if its X or Oand Checks if someone Won
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ABoard::CalcMove(FString Field, bool IsX)
+bool ABoard::CalcMove(FString Field, bool IsX, bool IsSimulate)
 {
     // Check if the move is valid
     if (validateMove(Field))
@@ -189,11 +197,19 @@ bool ABoard::CalcMove(FString Field, bool IsX)
         {
             Board[tempValue[0]].Columns[tempValue[1]]->SetMaterial(0, XMaterial);
             Board[tempValue[0]].Columns[tempValue[1]]->ComponentTags.Add(FName("X"));
+            if (IsSimulate == false)
+            {
+            Board[tempValue[0]].Columns[tempValue[1]]->AddRelativeRotation(FRotator(0.f, 0.f, 90.f));
+            }
         }
         else
         {
             Board[tempValue[0]].Columns[tempValue[1]]->SetMaterial(0, OMaterial);
             Board[tempValue[0]].Columns[tempValue[1]]->ComponentTags.Add(FName("O"));
+            if (IsSimulate == false)
+            {
+                Board[tempValue[0]].Columns[tempValue[1]]->AddRelativeRotation(FRotator(0.f, 0.f, -90.f));
+            }
         }
         return true;
     }
@@ -207,6 +223,7 @@ bool ABoard::CalcMove(FString Field, bool IsX)
         return false;
     }
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Checks if the Move made is not already taken
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,16 +232,15 @@ bool ABoard::validateMove(FString Field)
     // Check if the move is not already taken
     if (!takenListFull.Contains(Field))
     {
-        UE_LOG(LogTemp, Warning, TEXT("Move is not taken"));
+        ////UE_LOG(LogTemp, Warning, TEXT("Move is not taken"));
         return true;
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Move is already taken"));
+        ////UE_LOG(LogTemp, Warning, TEXT("Move is already taken"));
         return false;
     }
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // simple Return to get the current Board
@@ -235,7 +251,6 @@ TArray<FRows> ABoard::getBoard()
     return Board;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // simple Return to get the current TakenList
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +259,6 @@ TArray<FString> ABoard::GetTakenList()
     // Return the list of taken moves
     return takenListFull;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Win Condition for X and O 
@@ -288,14 +302,14 @@ int ABoard::CheckWin()
         {
             // X Wins
             IsWon = true;
-            UE_LOG(LogTemp, Warning, TEXT("X Won"));
+            //UE_LOG(LogTemp, Warning, TEXT("X Won"));
             return 1;
         }
         if (OCounter == 3)
         {
             // O Wins
             IsWon = true;
-            UE_LOG(LogTemp, Warning, TEXT("O Won"));
+            //UE_LOG(LogTemp, Warning, TEXT("O Won"));
             return -1;
         }
     }
@@ -329,14 +343,14 @@ int ABoard::CheckWin()
         {
             // X Wins
             IsWon = true;
-            UE_LOG(LogTemp, Warning, TEXT("X Won"));
+            //UE_LOG(LogTemp, Warning, TEXT("X Won"));
             return 1;
         }
         if (OCounter == 3)
         {
             // O Wins
             IsWon = true;
-            UE_LOG(LogTemp, Warning, TEXT("O Won"));
+            //UE_LOG(LogTemp, Warning, TEXT("O Won"));
             return -1;
         }
     }
@@ -366,14 +380,14 @@ int ABoard::CheckWin()
     {
         // X Wins
         IsWon = true;
-        UE_LOG(LogTemp, Warning, TEXT("X Won"));
+        //UE_LOG(LogTemp, Warning, TEXT("X Won"));
         return 1;
     }
     if (OCounter == 3)
     {
         // O Wins
         IsWon = true;
-        UE_LOG(LogTemp, Warning, TEXT("O Won"));
+        //UE_LOG(LogTemp, Warning, TEXT("O Won"));
         return -1;
     }
 
@@ -409,14 +423,14 @@ int ABoard::CheckWin()
     {
         // X Wins
         IsWon = true;
-        UE_LOG(LogTemp, Warning, TEXT("X Won"));
+        //UE_LOG(LogTemp, Warning, TEXT("X Won"));
         return 1;
     }
     if (OCounter == 3)
     {
         // O Wins
         IsWon = true;
-        UE_LOG(LogTemp, Warning, TEXT("O Won"));
+        //UE_LOG(LogTemp, Warning, TEXT("O Won"));
         return -1;
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -425,8 +439,7 @@ int ABoard::CheckWin()
 
     if (IsWon == false && takenListFull.Num() == AmountOfRows * AmountOfColumns)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Taken List Full is: %i"), takenListFull.Num());
-        UE_LOG(LogTemp, Warning, TEXT("Its a TIE!"));
+        //UE_LOG(LogTemp, Warning, TEXT("Its a TIE!"));
         return 0;
     }
 
@@ -434,6 +447,7 @@ int ABoard::CheckWin()
     // No One Won and Board not full
     return 2;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Debug Function to visualize a specific Cell
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -481,8 +495,13 @@ void ABoard::ResetLastMadeMove(FString& currentMove)
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("WARNING: couldnt remove AI Move from Taken List"));
+        //UE_LOG(LogTemp, Warning, TEXT("WARNING: couldnt remove AI Move from Taken List"));
         return;
     }
 
+}
+
+float ABoard::TurnCubeOverTime(float Value1)
+{
+    return 1.f;
 }
