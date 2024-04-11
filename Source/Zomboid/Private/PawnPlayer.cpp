@@ -245,3 +245,30 @@ void APawnPlayer::ReceiveBoardRef(ABoard* Board)
 {
 	BoardReference = Board;
 }
+
+
+void APawnPlayer::AddToLife(int NewLife)
+{
+    Life = Life + NewLife;
+}
+
+void APawnPlayer::SubtractFromLife(int NewLife)
+{
+    Life = Life - NewLife;
+    UE_LOG(LogTemp, Warning, TEXT("New Life is: %i"), Life);
+}
+
+int APawnPlayer::GetLife()
+{
+    return Life;
+}
+
+void APawnPlayer::AddToScore(int NewScore)
+{
+    Score = Score + NewScore;
+}
+
+int APawnPlayer::GetScore()
+{
+    return Score;
+}

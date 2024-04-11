@@ -23,6 +23,11 @@ void AGameLogic::BeginPlay()
 	setActivePlayer(true);
 	setActiveEnemy(false);
 
+	PlayerReference->AddToLife(3);
+	EnemyReference->AddToLife(3);
+	RefreshTextActor();
+	CurrentTurn = 0;
+
 }
 
 // Called every frame
@@ -83,16 +88,35 @@ void AGameLogic::ProcessInput(FString Field)
 			if (BoardReference)
 			{
 				IsSucess = BoardReference->CalcMove(Field, true, false); // Move Ausgeführt
-				int CurrentStateOfBoard = BoardReference->CheckWin();
+				int CurrentStateOfBoard = (BoardReference->CheckWin()); // (Player Wins:1; Computer Wins: -1; Tie:0 and keep Running is 2)
 				if (CurrentStateOfBoard == -1 || CurrentStateOfBoard == 1 || CurrentStateOfBoard == 0) // Spiel ist beendet
 				{
 					setActivePlayer(false);
 					setActiveEnemy(false);
+					CurrentTurn++;
 					MultiDispatcher.Broadcast(CurrentStateOfBoard);
+
+					// Player Looses
+					if (CurrentStateOfBoard == -1)
+					{
+						EnemyReference->AddToLife(1);
+						PlayerReference->SubtractFromLife(1);
+						RefreshTextActor();
+					}
+					// Player Wins
+					else if (CurrentStateOfBoard == 1)
+					{
+						PlayerReference->AddToLife(1);
+						EnemyReference->SubtractFromLife(1);
+						RefreshTextActor();
+					}
+
 					return;				
 				}
 				if (IsSucess)
 				{
+					PlayerReference->AddToScore(1);
+					RefreshTextActor();
 					setActivePlayer(false);
 					setActiveEnemy(true);
 				}
@@ -127,11 +151,27 @@ void AGameLogic::ProcessInput(FString Field)
 			{
 				setActivePlayer(false);
 				setActiveEnemy(false);
+				CurrentTurn++;
 				MultiDispatcher.Broadcast(CurrentStateOfBoard);
+				// Player Looses
+				if (CurrentStateOfBoard == -1)
+				{
+					EnemyReference->AddToLife(1);
+					PlayerReference->SubtractFromLife(1);
+					RefreshTextActor();
+				}
+				// Player Wins
+				else if (CurrentStateOfBoard == 1)
+				{
+					PlayerReference->AddToLife(1);
+					EnemyReference->SubtractFromLife(1);
+					RefreshTextActor();
+				}
 				return;
 			}
 			setActiveEnemy(false);
 			setActivePlayer(true);
+			RefreshTextActor();
 		}
 	}
 }
@@ -158,4 +198,32 @@ void AGameLogic::ResetBoardForNewGame()
 	BoardReference->InitPlayboard();
 	setActivePlayer(true);
 	setActiveEnemy(false);
+}
+
+
+void AGameLogic::RefreshTextActor()
+{
+	if (PlayerReference != nullptr && ScoreCounter != nullptr)
+	{
+		UTextRenderComponent* ScoreCountTemp = ScoreCounter->GetTextRender();
+		ScoreCountTemp->SetText(FText::Format(NSLOCTEXT("Namespace", "Key", "Your Current Score: {0}"), FText::AsNumber(PlayerReference->GetScore())));
+	}
+
+	if (EnemyReference != nullptr && LifeCounterEnemy != nullptr)
+	{
+		UTextRenderComponent* LifeCounterEnemyTemp = LifeCounterEnemy->GetTextRender();
+		LifeCounterEnemyTemp->SetText(FText::Format(NSLOCTEXT("Namespace", "Key", "Enemy Life: {0}"), FText::AsNumber(EnemyReference->GetLife())));
+	}
+
+	if (PlayerReference != nullptr && LifeCounterPlayer != nullptr)
+	{
+		UTextRenderComponent* LifeCounterPlayerTemp = LifeCounterPlayer->GetTextRender();
+		LifeCounterPlayerTemp->SetText(FText::Format(NSLOCTEXT("Namespace", "Key", "Player Life: {0}"), FText::AsNumber(PlayerReference->GetLife())));
+	}
+
+	if (TurnCounter != nullptr)
+	{
+		UTextRenderComponent* TurnCounterTemp = TurnCounter->GetTextRender();
+		TurnCounterTemp->SetText(FText::Format(NSLOCTEXT("Namespace", "Key", "Current Turn: {0} / 5"), FText::AsNumber(CurrentTurn)));
+	}
 }

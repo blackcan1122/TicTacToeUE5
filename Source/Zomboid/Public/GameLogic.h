@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Board.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/TextRenderActor.h"
+#include "Components/TextRenderComponent.h"
 #include "Delegates/MulticastDelegateBase.h"
 #include "GameLogic.generated.h"
 
@@ -27,6 +29,10 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Multi GameLogic Dispatcher")
 	FMultiDispatcher MultiDispatcher;
+
+	UFUNCTION()
+	void RefreshTextActor();
+
 
 protected:
 
@@ -52,6 +58,10 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ResetBoardForNewGame();
 
+	UPROPERTY()
+	int CurrentTurn;
+
+
 
 	// References to other Relevant Actors
 	UPROPERTY(BlueprintReadOnly)
@@ -63,7 +73,17 @@ protected:
 	UPROPERTY(EditAnywhere)
 	APawnPlayer* EnemyReference;
 
+	UPROPERTY(EditAnywhere)
+	ATextRenderActor* ScoreCounter;
 
+	UPROPERTY(EditAnywhere)
+	ATextRenderActor* LifeCounterPlayer;
+
+	UPROPERTY(EditAnywhere)
+	ATextRenderActor* LifeCounterEnemy;
+
+	UPROPERTY(EditAnywhere)
+	ATextRenderActor* TurnCounter;
 
 
 public:	
@@ -76,6 +96,6 @@ public:
 private:
 
 	// Private Attributes
-	bool Running = true;
+
 	// Private 
 };

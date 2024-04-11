@@ -50,6 +50,22 @@ public:
 	UFUNCTION()
 	int minimax(TArray<FRows> Board, int depth, int alpha, int beta, bool isMaximazing);
 
+	UFUNCTION()
+	void AddToLife(int NewLife);
+
+	UFUNCTION()
+	void SubtractFromLife(int NewLife);
+
+	UFUNCTION()
+	int GetLife();
+
+	UFUNCTION()
+	void AddToScore(int NewScore);
+
+	UFUNCTION()
+	int GetScore();
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -69,6 +85,13 @@ protected:
 
 	UPROPERTY()
 	ABoard* BoardReference;
+
+	UPROPERTY()
+	int Life;
+
+	UPROPERTY()
+	int Score;
+
 	//Methods
 
 	UFUNCTION()
@@ -76,6 +99,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void MakeMove(FString ComponentHit);
+
 
 
 private:
