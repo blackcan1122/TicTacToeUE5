@@ -130,4 +130,16 @@ public:
 	UPROPERTY()
 	TArray<FRows> Board;
 
+	UFUNCTION(BlueprintCallable)
+	void SwitchTwoColumns(int Column1, int Column2);
+
+	UFUNCTION(BlueprintCallable)
+	void MarkColumn(int Column);
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* OverlayMaterialRow;
+
+	UFUNCTION(BlueprintCallable)
+	void ClearOverlayMaterials();
+
 };

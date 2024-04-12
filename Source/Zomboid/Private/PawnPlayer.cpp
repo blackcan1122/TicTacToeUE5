@@ -110,10 +110,10 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
     int alpha = INT_MIN;
     int beta = INT_MAX;
 
-    // For First AI Move making a Random Decision to keep iterations small and keeping the Game Random
-    if (BoardReference->GetTakenList().Num() <= 2)
+     //For First AI Move making a Random Decision to keep iterations small and keeping the Game Random
+    if (BoardReference->GetTakenList().Num() <= 1)
     {
-        //UE_LOG(LogTemp, Warning, TEXT("Making Easy Move for First Move hahahaha"));
+        UE_LOG(LogTemp, Warning, TEXT("Making Easy Move for First Move hahahaha"));
         return MakeEasyAIMove();
     }
 
@@ -128,7 +128,7 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
             CurrentMove.Append(",");
             CurrentMove.AppendInt(j);
             //Validation if the field is already occupied
-            if (BoardReference -> ValidInputAI(CurrentMove) == true)
+            if (BoardReference ->validateMove(CurrentMove) == true)
             {
                 BoardReference->CalcMove(CurrentMove, false, true);  
                 CurrentScore = minimax(BoardReference->getBoard(), 0, alpha, beta, false);    // Minimax Algorithm with alpha beta Pruning
@@ -144,7 +144,7 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
         }
 
     }
-    //UE_LOG(LogTemp, Warning, TEXT("Amount of Loops are: %i"), Loopcount);
+    UE_LOG(LogTemp, Warning, TEXT("Amount of Loops are: %i"), Loopcount);
     return  BestMove;
 
 }
@@ -186,16 +186,16 @@ int APawnPlayer::minimax(TArray<FRows> Board, int depth, int alpha, int beta, bo
                 CurrentMove.AppendInt(j);
 
                 //Validation if the field is already occupied
-                if (BoardReference->ValidInputAI(CurrentMove) == true)
+                if (BoardReference->validateMove(CurrentMove) == true)
                 {
                     BoardReference->CalcMove(CurrentMove, false, true);
                     CurrentScore = minimax(BoardReference->getBoard(), depth + 1, alpha, beta, false);
                     BoardReference->ResetLastMadeMove(CurrentMove);
 
                     BestScore = FMath::Max(CurrentScore, BestScore);
-                    alpha = FMath::Max(alpha, BestScore);
-                    if (beta <= alpha)
-                        break; // Beta cutoff
+                    //alpha = FMath::Min(alpha, BestScore);
+                    //if (beta <= alpha)
+                    //    break; // Beta cutoff
                 }
             }
         }
@@ -223,16 +223,16 @@ int APawnPlayer::minimax(TArray<FRows> Board, int depth, int alpha, int beta, bo
                 CurrentMove.AppendInt(j);
 
                 //Validation if the field is already occupied
-                if (BoardReference->ValidInputAI(CurrentMove) == true)
+                if (BoardReference->validateMove(CurrentMove) == true)
                 {
                     BoardReference->CalcMove(CurrentMove, true, true);
                     CurrentScore = minimax(BoardReference->getBoard(), depth + 1, alpha, beta, true);
                     BoardReference->ResetLastMadeMove(CurrentMove);
 
                     BestScore = FMath::Min(CurrentScore, BestScore);
-                    beta = FMath::Min(beta, BestScore);
-                    if (beta <= alpha)
-                        break; // Alpha cutoff
+                    //beta = FMath::Max(beta, BestScore);
+                    //if (beta <= alpha)
+                    //    break; // Alpha cutoff
                 }
             }
         }

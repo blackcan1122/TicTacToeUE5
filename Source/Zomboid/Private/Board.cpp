@@ -229,17 +229,28 @@ bool ABoard::CalcMove(FString Field, bool IsX, bool IsSimulate)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ABoard::validateMove(FString Field)
 {
-    // Check if the move is not already taken
-    if (!takenListFull.Contains(Field))
+    //// Check if the move is not already taken
+    //if (!takenListFull.Contains(Field))
+    //{
+    //    ////UE_LOG(LogTemp, Warning, TEXT("Move is not taken"));
+    //    return true;
+    //}
+    //else
+    //{
+    //    ////UE_LOG(LogTemp, Warning, TEXT("Move is already taken"));
+    //    return false;
+    //}
+
+    TArray<int> tempValue = ParseInputMove(Field);
+    if (Board[tempValue[0]][tempValue[1]]->ComponentTags.Contains("X") || Board[tempValue[0]][tempValue[1]]->ComponentTags.Contains("O"))
     {
-        ////UE_LOG(LogTemp, Warning, TEXT("Move is not taken"));
-        return true;
+        return false;
     }
     else
     {
-        ////UE_LOG(LogTemp, Warning, TEXT("Move is already taken"));
-        return false;
+        return true;
     }
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -457,7 +468,6 @@ void ABoard::TestRow()
     Board[Rows].Columns[Columns]->SetMaterial(0, XMaterial);
 }
 
-
 void ABoard::SaveBoard()
 {
     SavedBoard = Board;
@@ -469,7 +479,6 @@ void ABoard::RestoreBoard()
     Board = SavedBoard;
     takenListFull = SavedTakenList;
 }
-
 
 bool ABoard::ValidInputAI(FString& input)
 {
@@ -504,4 +513,86 @@ void ABoard::ResetLastMadeMove(FString& currentMove)
 float ABoard::TurnCubeOverTime(float Value1)
 {
     return 1.f;
+}
+
+void ABoard::SwitchTwoColumns(int Column1, int Column2)
+{
+    TArray<UMaterialInstance*> MaterialsRow1;
+    TArray<FRotator> RotationRow1;
+    TArray<FName> TagsRow1;
+
+    TArray<UMaterialInstance*> MaterialsRow2;
+    TArray<FRotator> RotationRow2;
+    TArray<FName> TagsRow2;
+
+    for (int i = 0; i < Board[Column1].Columns.Num(); i++)
+    { 
+        MaterialsRow1.Add(Cast<UMaterialInstance>(Board[Column1][i]->GetMaterial(0)));
+        RotationRow1.Add(Board[Column1][i]->GetRelativeRotation());
+        if (Board[Column1][i]->ComponentTags.Num() > 0)
+        {
+            TagsRow1.Add(Board[Column1][i]->ComponentTags[0]);
+        }
+        else
+        {
+            TagsRow1.Add(" ");
+        }
+
+    }
+    for (int i = 0; i < Board[Column2].Columns.Num(); i++)
+    {
+        MaterialsRow2.Add(Cast<UMaterialInstance>(Board[Column2][i]->GetMaterial(0)));
+        RotationRow2.Add(Board[Column2][i]->GetRelativeRotation());
+        if (Board[Column2][i]->ComponentTags.Num() > 0)
+        {
+            TagsRow2.Add(Board[Column2][i]->ComponentTags[0]);
+        }
+        else
+        {
+            TagsRow2.Add(" ");
+        }
+
+
+        Board[Column2][i]->SetMaterial(0, MaterialsRow1[i]);
+        Board[Column2][i]->SetRelativeRotation(RotationRow1[i]);
+        Board[Column2][i]->ComponentTags.Empty();
+        Board[Column2][i]->ComponentTags.Add(TagsRow1[i]);
+    }
+
+    for (int i = 0; i < Board[Column1].Columns.Num(); i++)
+    {
+        Board[Column1][i]->SetMaterial(0, MaterialsRow2[i]);
+        Board[Column1][i]->SetRelativeRotation(RotationRow2[i]);
+        Board[Column1][i]->ComponentTags.Empty();
+        Board[Column1][i]->ComponentTags.Add(TagsRow2[i]);
+    }
+}
+
+void ABoard::MarkColumn(int Row)
+{
+    for (int i = 0; i < Board.Num(); i++)
+    {
+        for (int j = 0; j < Board[i].Columns.Num(); j++)
+        {
+            Board[i][j]->SetOverlayMaterial(NULL);
+        }
+    }
+    for (int i = 0; i < Board.Num(); i++)
+    {
+        for (int j = 0; j < Board[i].Columns.Num(); j++)
+        {
+            Board[Row][i]->SetOverlayMaterial(OverlayMaterialRow);
+        }
+    }
+}
+
+void ABoard::ClearOverlayMaterials()
+{
+    for (int i = 0; i < Board.Num(); i++)
+    {
+        for (int j = 0; j < Board[i].Columns.Num(); j++)
+        {
+            Board[i][j]->SetOverlayMaterial(NULL);
+        }
+    }
 }
