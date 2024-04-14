@@ -494,19 +494,11 @@ bool ABoard::ValidInputAI(FString& input)
 
 void ABoard::ResetLastMadeMove(FString& currentMove)
 {
-    if (takenListFull.Contains(currentMove))
-    {
         int i = ParseInputMove(currentMove)[0];
         int j = ParseInputMove(currentMove)[1];
         takenListFull.Remove(currentMove);
         Board[i][j]->ComponentTags.Empty();
         Board[i][j]->SetMaterial(0, BaseMaterial);
-    }
-    else
-    {
-        //UE_LOG(LogTemp, Warning, TEXT("WARNING: couldnt remove AI Move from Taken List"));
-        return;
-    }
 
 }
 
@@ -515,7 +507,62 @@ float ABoard::TurnCubeOverTime(float Value1)
     return 1.f;
 }
 
-void ABoard::SwitchTwoColumns(int Column1, int Column2)
+bool ABoard::SwitchTwoColumns(int Column1, int Column2)
+{
+    TArray<UMaterialInstance*> MaterialsColumn1;
+    TArray<FRotator> RotationColumns1;
+    TArray<FName> TagsColumn1;
+
+    TArray<UMaterialInstance*> MaterialsColumn2;
+    TArray<FRotator> RotationColumns2;
+    TArray<FName> TagsColumn2;
+
+    for (int i = 0; i < Board[Column1].Columns.Num(); i++)
+    { 
+        MaterialsColumn1.Add(Cast<UMaterialInstance>(Board[Column1][i]->GetMaterial(0)));
+        RotationColumns1.Add(Board[Column1][i]->GetRelativeRotation());
+        if (Board[Column1][i]->ComponentTags.Num() > 0)
+        {
+            TagsColumn1.Add(Board[Column1][i]->ComponentTags[0]);
+        }
+        else
+        {
+            TagsColumn1.Add(" ");
+        }
+
+    }
+    for (int i = 0; i < Board[Column2].Columns.Num(); i++)
+    {
+        MaterialsColumn2.Add(Cast<UMaterialInstance>(Board[Column2][i]->GetMaterial(0)));
+        RotationColumns2.Add(Board[Column2][i]->GetRelativeRotation());
+        if (Board[Column2][i]->ComponentTags.Num() > 0)
+        {
+            TagsColumn2.Add(Board[Column2][i]->ComponentTags[0]);
+        }
+        else
+        {
+            TagsColumn2.Add(" ");
+        }
+
+
+        Board[Column2][i]->SetMaterial(0, MaterialsColumn1[i]);
+        Board[Column2][i]->SetRelativeRotation(RotationColumns1[i]);
+        Board[Column2][i]->ComponentTags.Empty();
+        Board[Column2][i]->ComponentTags.Add(TagsColumn1[i]);
+    }
+
+    for (int i = 0; i < Board[Column1].Columns.Num(); i++)
+    {
+        Board[Column1][i]->SetMaterial(0, MaterialsColumn2[i]);
+        Board[Column1][i]->SetRelativeRotation(RotationColumns2[i]);
+        Board[Column1][i]->ComponentTags.Empty();
+        Board[Column1][i]->ComponentTags.Add(TagsColumn2[i]);
+    }
+
+    return true;
+}
+
+bool ABoard::SwitchTwoRows(int Row1, int Row2)
 {
     TArray<UMaterialInstance*> MaterialsRow1;
     TArray<FRotator> RotationRow1;
@@ -525,13 +572,13 @@ void ABoard::SwitchTwoColumns(int Column1, int Column2)
     TArray<FRotator> RotationRow2;
     TArray<FName> TagsRow2;
 
-    for (int i = 0; i < Board[Column1].Columns.Num(); i++)
-    { 
-        MaterialsRow1.Add(Cast<UMaterialInstance>(Board[Column1][i]->GetMaterial(0)));
-        RotationRow1.Add(Board[Column1][i]->GetRelativeRotation());
-        if (Board[Column1][i]->ComponentTags.Num() > 0)
+    for (int i = 0; i < Board[Row1].Columns.Num(); i++)
+    {
+        MaterialsRow1.Add(Cast<UMaterialInstance>(Board[i][Row1]->GetMaterial(0)));
+        RotationRow1.Add(Board[i][Row1]->GetRelativeRotation());
+        if (Board[i][Row1]->ComponentTags.Num() > 0)
         {
-            TagsRow1.Add(Board[Column1][i]->ComponentTags[0]);
+            TagsRow1.Add(Board[i][Row1]->ComponentTags[0]);
         }
         else
         {
@@ -539,13 +586,13 @@ void ABoard::SwitchTwoColumns(int Column1, int Column2)
         }
 
     }
-    for (int i = 0; i < Board[Column2].Columns.Num(); i++)
+    for (int i = 0; i < Board[Row2].Columns.Num(); i++)
     {
-        MaterialsRow2.Add(Cast<UMaterialInstance>(Board[Column2][i]->GetMaterial(0)));
-        RotationRow2.Add(Board[Column2][i]->GetRelativeRotation());
-        if (Board[Column2][i]->ComponentTags.Num() > 0)
+        MaterialsRow2.Add(Cast<UMaterialInstance>(Board[i][Row2]->GetMaterial(0)));
+        RotationRow2.Add(Board[i][Row2]->GetRelativeRotation());
+        if (Board[i][Row2]->ComponentTags.Num() > 0)
         {
-            TagsRow2.Add(Board[Column2][i]->ComponentTags[0]);
+            TagsRow2.Add(Board[i][Row2]->ComponentTags[0]);
         }
         else
         {
@@ -553,35 +600,93 @@ void ABoard::SwitchTwoColumns(int Column1, int Column2)
         }
 
 
-        Board[Column2][i]->SetMaterial(0, MaterialsRow1[i]);
-        Board[Column2][i]->SetRelativeRotation(RotationRow1[i]);
-        Board[Column2][i]->ComponentTags.Empty();
-        Board[Column2][i]->ComponentTags.Add(TagsRow1[i]);
+        Board[i][Row2]->SetMaterial(0, MaterialsRow1[i]);
+        Board[i][Row2]->SetRelativeRotation(RotationRow1[i]);
+        Board[i][Row2]->ComponentTags.Empty();
+        Board[i][Row2]->ComponentTags.Add(TagsRow1[i]);
     }
 
-    for (int i = 0; i < Board[Column1].Columns.Num(); i++)
+    for (int i = 0; i < Board[Row1].Columns.Num(); i++)
     {
-        Board[Column1][i]->SetMaterial(0, MaterialsRow2[i]);
-        Board[Column1][i]->SetRelativeRotation(RotationRow2[i]);
-        Board[Column1][i]->ComponentTags.Empty();
-        Board[Column1][i]->ComponentTags.Add(TagsRow2[i]);
+        Board[i][Row1]->SetMaterial(0, MaterialsRow2[i]);
+        Board[i][Row1]->SetRelativeRotation(RotationRow2[i]);
+        Board[i][Row1]->ComponentTags.Empty();
+        Board[i][Row1]->ComponentTags.Add(TagsRow2[i]);
     }
+    return true;
 }
 
-void ABoard::MarkColumn(int Row)
+void ABoard::HighlightColumn(int Column)
 {
     for (int i = 0; i < Board.Num(); i++)
     {
         for (int j = 0; j < Board[i].Columns.Num(); j++)
         {
-            Board[i][j]->SetOverlayMaterial(NULL);
+            if (!Board[i][j]->ComponentHasTag("MARK"))
+            {
+                Board[i][j]->SetOverlayMaterial(NULL);
+            }
         }
     }
     for (int i = 0; i < Board.Num(); i++)
     {
         for (int j = 0; j < Board[i].Columns.Num(); j++)
         {
-            Board[Row][i]->SetOverlayMaterial(OverlayMaterialRow);
+            if (Board[Column][i]->ComponentHasTag("MARK") == false)
+            {
+                Board[Column][i]->SetOverlayMaterial(OverlayMaterialRow);
+            }
+        }
+    }
+}
+
+void ABoard::MarkColumn(int Column)
+{
+    for (int i = 0; i < Board.Num(); i++)
+    {
+        for (int j = 0; j < Board[i].Columns.Num(); j++)
+        {
+            if (Board[Column][i]->ComponentHasTag("MARK") == false)
+            {
+                Board[Column][i]->ComponentTags.Add("MARK");
+                Board[Column][i]->SetOverlayMaterial(OverlayMaterialMarked);
+            }
+        }
+    }
+}
+
+void ABoard::HighlightRow(int Row)
+{
+    for (int i = 0; i < Board.Num(); i++)
+    {
+        for (int j = 0; j < Board[i].Columns.Num(); j++)
+        {
+             Board[i][j]->SetOverlayMaterial(NULL);
+        }
+    }
+    for (int i = 0; i < Board.Num(); i++)
+    {
+        for (int j = 0; j < Board[i].Columns.Num(); j++)
+        {
+            if (Board[i][Row]->ComponentHasTag("MARK") == false)
+            {
+                Board[i][Row]->SetOverlayMaterial(OverlayMaterialRow);
+            }
+        }
+    }
+}
+
+void ABoard::MarkRow(int Row)
+{
+    for (int i = 0; i < Board.Num(); i++)
+    {
+        for (int j = 0; j < Board[i].Columns.Num(); j++)
+        {
+            if (Board[j][Row]->ComponentHasTag("MARK") == false)
+            {
+                Board[j][Row]->ComponentTags.Add("MARK");
+                Board[j][Row]->SetOverlayMaterial(OverlayMaterialMarked);
+            }
         }
     }
 }
@@ -593,6 +698,10 @@ void ABoard::ClearOverlayMaterials()
         for (int j = 0; j < Board[i].Columns.Num(); j++)
         {
             Board[i][j]->SetOverlayMaterial(NULL);
+            if (Board[i][j]->ComponentHasTag("MARK"))
+            {
+                Board[i][j]->ComponentTags.Remove("MARK");
+            }
         }
     }
 }

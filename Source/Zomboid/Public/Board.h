@@ -131,15 +131,31 @@ public:
 	TArray<FRows> Board;
 
 	UFUNCTION(BlueprintCallable)
-	void SwitchTwoColumns(int Column1, int Column2);
+	bool SwitchTwoColumns(int Column1, int Column2);
+
+	UFUNCTION(BlueprintCallable)
+	bool SwitchTwoRows(int Row1, int Row2);
+
+	UFUNCTION(BlueprintCallable)
+	void HighlightColumn(int Column);
+
+	UFUNCTION(BlueprintCallable)
+	void HighlightRow(int Row);
 
 	UFUNCTION(BlueprintCallable)
 	void MarkColumn(int Column);
 
+	UFUNCTION(BlueprintCallable)
+	void MarkRow(int Row);
+
 	UPROPERTY(EditAnywhere)
 	UMaterialInstance* OverlayMaterialRow;
 
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* OverlayMaterialMarked;
+
 	UFUNCTION(BlueprintCallable)
 	void ClearOverlayMaterials();
+
 
 };

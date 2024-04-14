@@ -82,7 +82,7 @@ FString APawnPlayer::MakeEasyAIMove()
 
 	bool isValid = false;
 	FString ResultString = "0,0";
-	while (TakenSpace <= ColNum*RowNum && isValid == false)
+	while (isValid == false)
 	{
 		int RandomRowNumber = FMath::RandRange(0, RowNum - 1);
 		int RandomColNumber = FMath::RandRange(0, ColNum - 1);
@@ -110,7 +110,7 @@ FString APawnPlayer::MakeExtremeAIMove(TArray<FRows> Currentboard)
     int alpha = INT_MIN;
     int beta = INT_MAX;
 
-     //For First AI Move making a Random Decision to keep iterations small and keeping the Game Random
+    //For First AI Move making a Random Decision to keep iterations small and keeping the Game Random
     if (BoardReference->GetTakenList().Num() <= 1)
     {
         UE_LOG(LogTemp, Warning, TEXT("Making Easy Move for First Move hahahaha"));
