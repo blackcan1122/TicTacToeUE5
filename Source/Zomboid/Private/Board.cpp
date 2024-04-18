@@ -572,6 +572,7 @@ bool ABoard::SwitchTwoRows(int Row1, int Row2)
     TArray<FRotator> RotationRow2;
     TArray<FName> TagsRow2;
 
+    //Saving Variables for Row1
     for (int i = 0; i < Board[Row1].Columns.Num(); i++)
     {
         MaterialsRow1.Add(Cast<UMaterialInstance>(Board[i][Row1]->GetMaterial(0)));
@@ -586,6 +587,7 @@ bool ABoard::SwitchTwoRows(int Row1, int Row2)
         }
 
     }
+    //Saving Variables for Row1
     for (int i = 0; i < Board[Row2].Columns.Num(); i++)
     {
         MaterialsRow2.Add(Cast<UMaterialInstance>(Board[i][Row2]->GetMaterial(0)));
@@ -661,7 +663,10 @@ void ABoard::HighlightRow(int Row)
     {
         for (int j = 0; j < Board[i].Columns.Num(); j++)
         {
-             Board[i][j]->SetOverlayMaterial(NULL);
+            if (!Board[i][j]->ComponentHasTag("MARK"))
+            {
+                Board[i][j]->SetOverlayMaterial(NULL);
+            }
         }
     }
     for (int i = 0; i < Board.Num(); i++)
@@ -680,13 +685,11 @@ void ABoard::MarkRow(int Row)
 {
     for (int i = 0; i < Board.Num(); i++)
     {
-        for (int j = 0; j < Board[i].Columns.Num(); j++)
+        if (Board[i][Row]->ComponentHasTag("MARK") == false)
         {
-            if (Board[j][Row]->ComponentHasTag("MARK") == false)
-            {
-                Board[j][Row]->ComponentTags.Add("MARK");
-                Board[j][Row]->SetOverlayMaterial(OverlayMaterialMarked);
-            }
+            Board[i][Row]->SetOverlayMaterial(NULL);
+            Board[i][Row]->ComponentTags.Add("MARK");
+            Board[i][Row]->SetOverlayMaterial(OverlayMaterialMarked);
         }
     }
 }
