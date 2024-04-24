@@ -20,6 +20,9 @@ void ABoard::BeginPlay()
 
     // Initialize the playboard
     InitPlayboard();
+
+    RowArrowInvert = 1;
+    ColumnArrowInvert = 1;
 }
 
 void ABoard::Tick(float DeltaTime)
@@ -133,6 +136,9 @@ void ABoard::CleanComponents(TArray<FRows>& Boardinput)
     // Clear the board array
     takenListFull.Empty();
     Boardinput.Empty();
+
+    // Clear Helper Components
+    CleanAllHelper(RowArrow);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -706,5 +712,225 @@ void ABoard::ClearOverlayMaterials()
                 Board[i][j]->ComponentTags.Remove("MARK");
             }
         }
+    }
+}
+
+void ABoard::MoveRow(int Row, bool Forward)
+{
+    TArray<UMaterialInstance*> MaterialsRow1;
+    TArray<FRotator> RotationRow1;
+    TArray<FName> TagsRow1;
+
+    //Saving Variables for Row1
+    for (int i = 0; i < Board[Row].Columns.Num(); i++)
+    {
+        MaterialsRow1.Add(Cast<UMaterialInstance>(Board[i][Row]->GetMaterial(0)));
+        RotationRow1.Add(Board[i][Row]->GetRelativeRotation());
+        if (Board[i][Row]->ComponentTags.Num() > 0)
+        {
+            TagsRow1.Add(Board[i][Row]->ComponentTags[0]);
+        }
+        else
+        {
+            TagsRow1.Add(" ");
+        }
+
+    }
+
+    if (Forward)
+    {
+        for (int i = 0; i < Board[Row].Columns.Num(); i++)
+        {
+            //Case for first piece
+            if (i == 0)
+            {
+                Board[i][Row]->SetMaterial(0, MaterialsRow1[MaterialsRow1.Num() - 1]);
+                Board[i][Row]->SetRelativeRotation(RotationRow1[RotationRow1.Num() - 1]);
+                Board[i][Row]->ComponentTags.Empty();
+                Board[i][Row]->ComponentTags.Add(TagsRow1[TagsRow1.Num() - 1]);
+            }
+            // all other Pieces
+            else
+            {
+                Board[i][Row]->SetMaterial(0, MaterialsRow1[i - 1]);
+                Board[i][Row]->SetRelativeRotation(RotationRow1[i - 1]);
+                Board[i][Row]->ComponentTags.Empty();
+                Board[i][Row]->ComponentTags.Add(TagsRow1[i - 1]);
+            }
+        }
+    }
+
+    else
+    {
+        for (int i = 0; i < Board[Row].Columns.Num(); i++)
+        {
+            //Case for last piece
+            if (i == Board[Row].Columns.Num() - 1)
+            {
+                Board[i][Row]->SetMaterial(0, MaterialsRow1[0]);
+                Board[i][Row]->SetRelativeRotation(RotationRow1[0]);
+                Board[i][Row]->ComponentTags.Empty();
+                Board[i][Row]->ComponentTags.Add(TagsRow1[0]);
+            }
+            // all other Pieces
+            else
+            {
+                Board[i][Row]->SetMaterial(0, MaterialsRow1[i + 1]);
+                Board[i][Row]->SetRelativeRotation(RotationRow1[i + 1]);
+                Board[i][Row]->ComponentTags.Empty();
+                Board[i][Row]->ComponentTags.Add(TagsRow1[i + 1]);
+            }
+        }
+    }
+
+}
+
+void ABoard::DrawRowArrow()
+{
+    RowArrow = NewObject<UArrowComponent>(this, UArrowComponent::StaticClass(), "ArrowRow");
+    RowArrow->ComponentTags.Add("HELPER");
+    RowArrow->RegisterComponent();
+    RowArrow->bHiddenInGame = false;
+    RowArrow->SetArrowFColor(FColor::Cyan);
+    AddInstanceComponent(RowArrow);
+    MarkComponentsRenderStateDirty();
+}
+
+void ABoard::UpdateRowArrowPos(int Row)
+{
+    FVector Offset = FVector(0, 0, 100);
+    Offset.X = Offset.X - (((Row-1) * 100.f)+OffsetForArrow);
+    RowArrow->SetRelativeLocation(Offset);
+    RowArrow->SetRelativeRotation(FRotator(0,-90*RowArrowInvert,0));
+}
+
+void ABoard::InvertRowArrow()
+{
+    if (RowArrowInvert == 1)
+    {
+        RowArrowInvert = -1;
+    }
+    else
+    {
+        RowArrowInvert = 1;
+    }
+}
+
+
+void ABoard::MoveColumn(int Col, bool Upward)
+{
+    TArray<UMaterialInstance*> MaterialsRow1;
+    TArray<FRotator> RotationRow1;
+    TArray<FName> TagsRow1;
+
+    //Saving Variables for Row1
+        for (int j = 0; j < Board[Col].Columns.Num(); j++)
+        {
+            MaterialsRow1.Add(Cast<UMaterialInstance>(Board[Col][j]->GetMaterial(0)));
+            RotationRow1.Add(Board[Col][j]->GetRelativeRotation());
+            if (Board[Col][j]->ComponentTags.Num() > 0)
+            {
+                TagsRow1.Add(Board[Col][j]->ComponentTags[0]);
+            }
+            else
+            {
+                TagsRow1.Add(" ");
+            }
+        }
+
+    if (Upward)
+    {
+        for (int i = 0; i < Board[Col].Columns.Num(); i++)
+        {
+                //Case for first piece
+                if (i == 0)
+                {
+                    Board[Col][i]->SetMaterial(0, MaterialsRow1[MaterialsRow1.Num() - 1]);
+                    Board[Col][i]->SetRelativeRotation(RotationRow1[RotationRow1.Num() - 1]);
+                    Board[Col][i]->ComponentTags.Empty();
+                    Board[Col][i]->ComponentTags.Add(TagsRow1[TagsRow1.Num() - 1]);
+                }
+                // all other Pieces
+                else
+                {
+                    Board[Col][i]->SetMaterial(0, MaterialsRow1[i - 1]);
+                    Board[Col][i]->SetRelativeRotation(RotationRow1[i - 1]);
+                    Board[Col][i]->ComponentTags.Empty();
+                    Board[Col][i]->ComponentTags.Add(TagsRow1[i - 1]);
+                }
+        }
+    }
+
+    else
+    {
+        for (int i = 0; i < Board[Col].Columns.Num(); i++)
+        {
+                //Case for last piece
+                if (i == Board[Col].Columns.Num() - 1)
+                {
+                    Board[Col][i]->SetMaterial(0, MaterialsRow1[0]);
+                    Board[Col][i]->SetRelativeRotation(RotationRow1[0]);
+                    Board[Col][i]->ComponentTags.Empty();
+                    Board[Col][i]->ComponentTags.Add(TagsRow1[0]);
+                }
+                // all other Pieces
+                else
+                {
+                    Board[Col][i]->SetMaterial(0, MaterialsRow1[i + 1]);
+                    Board[Col][i]->SetRelativeRotation(RotationRow1[i + 1]);
+                    Board[Col][i]->ComponentTags.Empty();
+                    Board[Col][i]->ComponentTags.Add(TagsRow1[i + 1]);
+                }
+        }
+    }
+}
+
+void ABoard::DrawColumnArrow()
+{
+    ColumnArrow = NewObject<UArrowComponent>(this, UArrowComponent::StaticClass(), "ColumnArrow");
+    ColumnArrow->ComponentTags.Add("HELPER");
+    ColumnArrow->RegisterComponent();
+    ColumnArrow->bHiddenInGame = false;
+    ColumnArrow->SetArrowFColor(FColor::Green);
+    AddInstanceComponent(ColumnArrow);
+    MarkComponentsRenderStateDirty();
+}
+
+
+void ABoard::UpdateColumArrowPos(int Row)
+{
+    FVector Offset = FVector(0, 0, 100);
+    Offset.Y = Offset.Y - (((Row - 1) * 100.f) + OffsetForColumnArrow);
+    ColumnArrow->SetRelativeLocation(Offset);
+    ColumnArrow->SetRelativeRotation(FRotator(0,0+(180*ColumnArrowInvert), 0));
+}
+
+
+void ABoard::InvertColumnArrow()
+{
+    if (ColumnArrowInvert == 1)
+    {
+        ColumnArrowInvert = 0;
+    }
+    else
+    {
+        ColumnArrowInvert = 1;
+    }
+}
+
+void ABoard::CleanAllHelper(USceneComponent* Helper)
+{
+
+    //UE_LOG(LogTemp, Warning, TEXT("CleanAllHelper"));
+    if (Helper != nullptr)
+    {
+        //UE_LOG(LogTemp, Warning, TEXT("Helper Not Nullptr"));
+        Helper->UnregisterComponent();
+        Helper->DestroyComponent();
+        RemoveInstanceComponent(Helper);
+    }
+    else
+    {
+        //UE_LOG(LogTemp, Warning, TEXT("Helper is nullptr"));
     }
 }

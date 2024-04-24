@@ -8,6 +8,7 @@
 #include "MyStructs.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TimelineComponent.h"
+#include "Components/ArrowComponent.h"
 #include "Board.generated.h"
 
 
@@ -154,8 +155,56 @@ public:
 	UPROPERTY(EditAnywhere)
 	UMaterialInstance* OverlayMaterialMarked;
 
+
 	UFUNCTION(BlueprintCallable)
 	void ClearOverlayMaterials();
 
+	UFUNCTION(BlueprintCallable)
+	void CleanAllHelper(USceneComponent* Helper);
+
+	UFUNCTION(BlueprintCallable)
+	void MoveRow(int Row, bool Forward);
+
+	UFUNCTION(BlueprintCallable)
+	void DrawRowArrow();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateRowArrowPos(int Row);
+
+	UPROPERTY(BlueprintReadOnly)
+	UArrowComponent* RowArrow;
+
+	UPROPERTY(EditAnywhere)
+	float OffsetForArrow;
+
+	UPROPERTY()
+	int RowArrowInvert;
+
+	UFUNCTION(BlueprintCallable)
+	void InvertRowArrow();
+
+
+
+
+	UFUNCTION(BlueprintCallable)
+	void MoveColumn(int Col, bool Upward);
+
+	UFUNCTION(BlueprintCallable)
+	void DrawColumnArrow();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateColumArrowPos(int Row);
+
+	UPROPERTY(BlueprintReadOnly)
+	UArrowComponent* ColumnArrow;
+
+	UPROPERTY(EditAnywhere)
+	float OffsetForColumnArrow;
+
+	UPROPERTY(VisibleAnywhere)
+	int ColumnArrowInvert;
+
+	UFUNCTION(BlueprintCallable)
+	void InvertColumnArrow();
 
 };
