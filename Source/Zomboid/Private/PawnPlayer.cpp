@@ -63,7 +63,7 @@ void APawnPlayer::MakeMove(FString ComponentHit)
 {
 	if (GetIsTurn() == true)
 	{
-		GameLogicReference->ProcessInput(ComponentHit);
+		GameLogicReference->ReceiveMove(ComponentHit);
 	}
 	
 }
@@ -82,7 +82,7 @@ FString APawnPlayer::MakeEasyAIMove()
 
 	bool isValid = false;
 	FString ResultString = "0,0";
-	while (isValid == false)
+	while (isValid == false && BoardReference->CheckBoardFull() == false)
 	{
 		int RandomRowNumber = FMath::RandRange(0, RowNum - 1);
 		int RandomColNumber = FMath::RandRange(0, ColNum - 1);

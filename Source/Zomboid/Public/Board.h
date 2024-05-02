@@ -110,8 +110,14 @@ public:
 	UFUNCTION()
 	int CheckWin();
 
+	UFUNCTION()
+	int CheckWinFive();
+
 	UFUNCTION(CallInEditor)
 	void TestRow();
+
+	UFUNCTION()
+	void TestInstruction(int Row, int Col);
 
 	UPROPERTY(VisibleAnywhere);
 	TArray<FString> takenListFull;
@@ -155,6 +161,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	UMaterialInstance* OverlayMaterialMarked;
 
+	UFUNCTION()
+	bool CheckBoardFull();
 
 	UFUNCTION(BlueprintCallable)
 	void ClearOverlayMaterials();

@@ -465,13 +465,34 @@ int ABoard::CheckWin()
     return 2;
 }
 
+int ABoard::CheckWinFive()
+{
+    return 2;
+}
+
+bool ABoard::CheckBoardFull()
+{
+    if (takenListFull.Num() == AmountOfRows * AmountOfColumns)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Debug Function to visualize a specific Cell
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ABoard::TestRow()
 {
-    // Test function to set material for a specific row and column
-    Board[Rows].Columns[Columns]->SetMaterial(0, XMaterial);
+        Board[Rows].Columns[Columns]->SetMaterial(0, XMaterial);
+}
+
+void ABoard::TestInstruction(int Row, int Col)
+{
+    Board[Row].Columns[Col]->SetMaterial(0, XMaterial);
 }
 
 void ABoard::SaveBoard()
