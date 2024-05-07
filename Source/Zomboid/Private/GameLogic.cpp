@@ -431,7 +431,7 @@ TArray<FString> AGameLogic::CalculateMovesOnInstructions(FString Startfield)
 	{
 		FVector2D NextMove = *DirectionMap.Find(Instruction);
 		StartMove2D = StartMove2D + NextMove;
-		InstructionsToExecute.Add(ParseIntToValidField(StartMove2D.X, StartMove2D.Y));
+		InstructionsToExecute.Add(FieldParser<FVector2D>(StartMove2D).ReturnValidField());
 	}
 
 	return InstructionsToExecute;
