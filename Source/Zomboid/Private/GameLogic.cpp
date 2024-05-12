@@ -21,12 +21,10 @@ AGameLogic::AGameLogic()
 void AGameLogic::BeginPlay()
 {
 	Super::BeginPlay();
-	SetupActorReferences();
 	SendSelfReference();
 	SendBoardReference();
 	setActivePlayer(true);
 	setActiveEnemy(false);
-
 	PlayerReference->AddToLife(3);
 	EnemyReference->AddToLife(3);
 	RefreshTextActor();
@@ -207,9 +205,6 @@ void AGameLogic::ProcessInputNormalTicTacToe(FString Field)
 void AGameLogic::ProcessInputCrawlTicTacToe(FString Field)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Crawl was Started"));
-	//Make Sure this Function will be evaluated two times
-	for (int i = 0; i <= 1; i++)
-	{
 		// Check if Player or Enemys Turn
 		if (PlayerReference->GetIsTurn() == true)
 		{
@@ -219,44 +214,12 @@ void AGameLogic::ProcessInputCrawlTicTacToe(FString Field)
 			if (BoardReference)
 			{
 				IsSucess = BoardReference->CalcMove(Field, true, false); // Move Ausgeführt
-				int CurrentStateOfBoard = (BoardReference->CheckWinFive()); // (Player Wins:1; Computer Wins: -1; Tie:0 and keep Running is 2)
-				if (CurrentStateOfBoard == -1 || CurrentStateOfBoard == 1 || CurrentStateOfBoard == 0) // Spiel ist beendet
-				{
-					setActivePlayer(false);
-					setActiveEnemy(false);
-					CurrentTurn++;
-					MultiDispatcher.Broadcast(CurrentStateOfBoard);
-
-					// Player Looses
-					if (CurrentStateOfBoard == -1)
-					{
-						EnemyReference->AddToLife(1);
-						PlayerReference->SubtractFromLife(1);
-						RefreshTextActor();
-					}
-					// Player Wins
-					else if (CurrentStateOfBoard == 1)
-					{
-						PlayerReference->AddToLife(1);
-						EnemyReference->SubtractFromLife(1);
-						RefreshTextActor();
-					}
-
-					return;
+				bool CurrentStateOfBoard = CheckWinCrawl(); // (Player Wins:1; Computer Wins: -1; Tie:0 and keep Running is 2)
 				}
-				if (IsSucess)
-				{
-					PlayerReference->AddToScore(1);
-					RefreshTextActor();
-					setActivePlayer(false);
-					setActiveEnemy(true);
-				}
-
-			}
-
+		}
+		
 			//Or Calling the Enemy Function inside the Players Block?
 			//ProcessInput(EnemyReference->MakeAIMove());
-		}
 		else
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Enemys Turn"));
@@ -292,7 +255,34 @@ void AGameLogic::ProcessInputCrawlTicTacToe(FString Field)
 			setActivePlayer(true);
 			RefreshTextActor();
 		}
+}
+
+bool AGameLogic::CheckWinCrawl()
+{
+	bool StillChecking = true;
+	while (StillChecking)
+	{
+		TArray<FRows>* BoardCopy = &BoardReference->Board;
+		if (BoardCopy != nullptr)
+		{
+			if (CheckForCorrectPattern() == true)
+			{
+				for (auto Move : InstructionsToExecute)
+				{
+					BoardReference->CleanCell(Move);
+				}
+			}
+			else
+			{
+				StillChecking = false;
+			}
+		}
+		else
+		{
+			return false;
+		}
 	}
+	return true;
 }
 
 void AGameLogic::setActivePlayer(bool SetIsTurn)
@@ -304,7 +294,6 @@ void AGameLogic::setActiveEnemy(bool SetIsTurn)
 {
 	EnemyReference->SetIsTurn(SetIsTurn);
 }
-
 
 void AGameLogic::SendBoardReference()
 {
@@ -323,7 +312,6 @@ void AGameLogic::ResetBoardForNewGame()
 	setActivePlayer(true);
 	setActiveEnemy(false);
 }
-
 
 void AGameLogic::RefreshTextActor()
 {
@@ -364,8 +352,14 @@ TArray<int> AGameLogic::ParseFieldToInt(FString Field)
 	bool ValueWasSet = false;
 
 	// Split the input string into two substrings based on the comma !IMPORTANT! Still misbehavior mit fields above 9 columns or rows
-	FString SubstringFirst = Field.Left(Field.Find(TEXT(",")));
-	FString SubstringSecond = Field.Right(Field.Find(TEXT(",")));
+	// Split the input string into two substrings based on the comma
+	int CommaIndex = Field.Find(TEXT(","));
+	FString SubstringFirst = Field.Left(CommaIndex);
+	FString SubstringSecond = Field.Right(Field.Len() - CommaIndex - 1);
+
+	// Print the substrings and their lengths for debugging
+	//UE_LOG(LogTemp, Display, TEXT("Substring 1: %s, Length: %d"), *SubstringFirst, SubstringFirst.Len());
+	//UE_LOG(LogTemp, Display, TEXT("Substring 2: %s, Length: %d"), *SubstringSecond, SubstringSecond.Len());
 
 	// Check if both substrings contain numbers only and convert them to integers
 	if (SubstringFirst.IsNumeric() && SubstringSecond.IsNumeric())
@@ -376,46 +370,58 @@ TArray<int> AGameLogic::ParseFieldToInt(FString Field)
 	}
 
 	// Debug printing of the parsed values
-	//if (GEngine && ValueWasSet)
-	//{
-	//	FString Value1Str = FString::Printf(TEXT("Value 1: %i"), Value1);
-	//	FString Value2Str = FString::Printf(TEXT("Value 2: %i"), Value2);
-	//	GEngine->AddOnScreenDebugMessage(2, 5.f, FColor::Cyan, Value1Str);
-	//	GEngine->AddOnScreenDebugMessage(3, 5.f, FColor::Magenta, Value2Str);
-	//}
+	//UE_LOG(LogTemp, Display, TEXT("Value 1: %i"), Value1);
+	//UE_LOG(LogTemp, Display, TEXT("Value 2: %i"), Value2);
+
+	// Debug printing of the parsed values
+	if (GEngine && ValueWasSet)
+	{
+		FString Value1Str = FString::Printf(TEXT("Value 1: %i"), Value1);
+		FString Value2Str = FString::Printf(TEXT("Value 2: %i"), Value2);
+		GEngine->AddOnScreenDebugMessage(2, 5.f, FColor::Cyan, Value1Str);
+		GEngine->AddOnScreenDebugMessage(3, 5.f, FColor::Magenta, Value2Str);
+	}
 
 	// Return the parsed values as an array
-
-	if (ValueWasSet)
-	{
-		TArray<int> returnArray;
-		returnArray.Add(Value1);
-		returnArray.Add(Value2);
-		return returnArray;
-	}
-	else
-	{
-		TArray<int> ReturnArray = { 99,99 };
-		return ReturnArray;
-	}
-
-
-
+	TArray<int> returnArray;
+	returnArray.Add(Value1);
+	returnArray.Add(Value2);
+	return returnArray;
 }
 
 
+// Check to see if the Current Pattern is doable
 bool AGameLogic::CheckForPossiblePlaces()
 {
 	TArray<FRows> BoardCopy = BoardReference->getBoard();
 
 	for (int i = 0; i < BoardCopy.Num(); i++)
 	{
-
+		for (int j = 0; j < BoardCopy[i].Columns.Num(); j++)
+		{
+			bool CheckIfPatternPossible = true;
+			bool currentMove = true;
+			FString TempField = FieldParser<int>(i, j).ReturnValidField();
+			TArray<FString> TempMoves = CalculateMovesOnInstructions(TempField);
+			for (auto Move : TempMoves)
+			{
+				currentMove = BoardReference->ValidInputAI(Move);
+				if (currentMove == false)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("UwU there is a Oopsie"));
+					CheckIfPatternPossible = false;
+				}
+			}
+			if (CheckIfPatternPossible == true)
+			{
+				BoardReference->Board[i][j]->SetMaterial(0, TestMaterial);
+			}
+		}
 	}
-	return false;
+	return true;
 }
 
-// Defining Function for iterating through the board and checking if all spots are valid spots
+// Converts a Set of Instructions to a Set of Fixed Positions in a 2D Grid based on the Startfield
 TArray<FString> AGameLogic::CalculateMovesOnInstructions(FString Startfield)
 {
 	InstructionsToExecute.Empty();
@@ -425,19 +431,67 @@ TArray<FString> AGameLogic::CalculateMovesOnInstructions(FString Startfield)
 	TArray<int> StartMove = ParseFieldToInt(Startfield);
 	FVector2D StartMove2D = FVector2D(StartMove[0], StartMove[1]);
 
-	//InstructionsToExecute.Add(ParseIntToValidField(StartMove[0], StartMove[1]));
-
 	for (auto& Instruction : Instructions)
 	{
 		FVector2D NextMove = *DirectionMap.Find(Instruction);
 		StartMove2D = StartMove2D + NextMove;
+		//InstructionsToExecute.Add(ParseIntToValidField(StartMove2D.X, StartMove2D.Y));
 		InstructionsToExecute.Add(FieldParser<FVector2D>(StartMove2D).ReturnValidField());
 	}
 
 	return InstructionsToExecute;
 }
 
+// Function for Checking if the Player Marked all Pieces of the corresponding Pattern Correctly
 bool AGameLogic::CheckForCorrectPattern()
 {
+	// Local Variables
+	bool CellIsValid;
+	TArray<FRows>& BoardRef = BoardReference->Board;
+	
+	// Looping through all Cells till we find a Cell Marked with X
+	for (int i = 0; i < BoardRef.Num(); i++)
+	{
+		for (int j = 0; j < BoardRef[i].Columns.Num(); j++)
+		{
+			// When we found a Cell Marked with X we calculate the Absolute Instructions Based on this Cell
+			if (BoardRef[i][j]->ComponentHasTag(FName("X")))
+			{
+				FString Startfield = FieldParser<int>(i, j).ReturnValidField();
+				CalculateMovesOnInstructions(Startfield);
+
+				bool AllCellSet = true; // Condition to check if all Instructions for this given Start cell is Valid or not resetting it for Every Cell we check
+
+				// Now Looping through all Created Absolute Instructions
+				for (auto Move : InstructionsToExecute)
+				{
+					CellIsValid = BoardReference->CellExist(Move);
+					if (CellIsValid == true)
+					{
+						TArray<int> IntMove = ParseFieldToInt(Move);
+						if (BoardRef[IntMove[0]][IntMove[1]]->ComponentHasTag(FName("X")) == false)
+						{
+							// If any Instructed Cell doesnt have a Marked X
+							AllCellSet = false;
+						}
+					}
+					else
+					{
+						// When a Cell is not Valid
+						AllCellSet = false;
+						break;
+					}
+
+				}
+				if (AllCellSet == true)
+				{
+					// When we found a Appropiate Pattern we Return true
+					return true;
+				}
+			}
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("No Matching Pattern Found"));
 	return false;
 }

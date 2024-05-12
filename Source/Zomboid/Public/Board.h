@@ -58,6 +58,12 @@ public:
 	UFUNCTION()
 	float TurnCubeOverTime(float Value1);
 
+	UFUNCTION()
+	void CleanCell(FString Field);
+
+	UFUNCTION()
+	bool CellExist(FString Field);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

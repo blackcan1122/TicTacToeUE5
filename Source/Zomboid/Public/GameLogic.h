@@ -54,11 +54,13 @@ private:
 	FVector2D Coord;
 
 public:
-	FieldParser(const FVector2D i) : Coord(i){}
+	FieldParser(FVector2D i) : Coord(i){}
 
 	FString ReturnValidField()
 	{
-		return FString::Printf(TEXT("%d,%d"),Coord.X, Coord.Y);
+		int CoordX = static_cast<int>(Coord.X);
+		int CoordY = static_cast<int>(Coord.Y);
+		return FString::Printf(TEXT("%d,%d"),CoordX, CoordY);
 	}
 };
 
@@ -104,6 +106,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	EChooseGameMode ActiveGamemode;
 
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* TestMaterial;
+
 
 protected:
 
@@ -136,39 +141,38 @@ protected:
 	TMap<FString, FVector2D> DirectionMap;
 
 
+	// Check und Win Conditions
+
+	UFUNCTION()
+	bool CheckWinCrawl();
+
+
 	// References to other Relevant Actors
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(Category = "References", EditAnywhere)
 	ABoard* BoardReference;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(Category = "References", EditAnywhere)
 	ABoardTarget* BoardTargetReference;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(Category = "References", EditAnywhere)
 	APawnPlayer* PlayerReference;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Category = "References", EditAnywhere)
 	APawnPlayer* EnemyReference;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Category = "References", EditAnywhere)
 	ATextRenderActor* ScoreCounter;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Category = "References", EditAnywhere)
 	ATextRenderActor* LifeCounterPlayer;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Category = "References", EditAnywhere)
 	ATextRenderActor* LifeCounterEnemy;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Category = "References", EditAnywhere)
 	ATextRenderActor* TurnCounter;
 
-	UFUNCTION()
-	bool CheckForPossiblePlaces();
-
-	UFUNCTION()
-	bool CheckForCorrectPattern();
-
-
-
+	//
 
 public:	
 	// Called every frame
@@ -191,6 +195,12 @@ public:
 
 	UFUNCTION(CallInEditor, BlueprintCallable)
 	TArray<FString> CalculateMovesOnInstructions(FString Startfield);
+
+	UFUNCTION(CallInEditor, BlueprintCallable)
+	bool CheckForPossiblePlaces();
+
+	UFUNCTION()
+	bool CheckForCorrectPattern();
 
 private:
 

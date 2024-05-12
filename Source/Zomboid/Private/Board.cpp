@@ -141,24 +141,36 @@ void ABoard::CleanComponents(TArray<FRows>& Boardinput)
     CleanAllHelper(RowArrow);
 }
 
+void ABoard::CleanCell(FString Field)
+{
+    if (CellExist(Field))
+    {
+        TArray<int> Move = ParseInputMove(Field);
+        Board[Move[0]][Move[1]]->ComponentTags.Empty();
+        Board[Move[0]][Move[1]]->SetRelativeRotation(FRotator(0,0,0));
+        Board[Move[0]][Move[1]]->SetMaterial(0, BaseMaterial);
+        takenListFull.Remove(Field);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Parsing a String like (2,1) into two integers 2 and 1 !IMPORTANT! There are misbehaviors with field greater than 9 columns and rows 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TArray<int> ABoard::ParseInputMove(FString Field)
 {
-    if (GEngine)
-    {
-        // Print the input field to the screen for debugging
-        GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Cyan, Field);
-    }
-
     int Value1;
     int Value2;
     bool ValueWasSet = false;
 
     // Split the input string into two substrings based on the comma !IMPORTANT! Still misbehavior mit fields above 9 columns or rows
-    FString SubstringFirst = Field.Left(Field.Find(TEXT(",")));
-    FString SubstringSecond = Field.Right(Field.Find(TEXT(",")));
+    // Split the input string into two substrings based on the comma
+    int CommaIndex = Field.Find(TEXT(","));
+    FString SubstringFirst = Field.Left(CommaIndex);
+    FString SubstringSecond = Field.Right(Field.Len() - CommaIndex - 1);
+
+    // Print the substrings and their lengths for debugging
+    //UE_LOG(LogTemp, Display, TEXT("Substring 1: %s, Length: %d"), *SubstringFirst, SubstringFirst.Len());
+    //UE_LOG(LogTemp, Display, TEXT("Substring 2: %s, Length: %d"), *SubstringSecond, SubstringSecond.Len());
 
     // Check if both substrings contain numbers only and convert them to integers
     if (SubstringFirst.IsNumeric() && SubstringSecond.IsNumeric())
@@ -167,6 +179,10 @@ TArray<int> ABoard::ParseInputMove(FString Field)
         Value2 = FCString::Atoi(*SubstringSecond);
         ValueWasSet = true;
     }
+
+    // Debug printing of the parsed values
+    //UE_LOG(LogTemp, Display, TEXT("Value 1: %i"), Value1);
+    //UE_LOG(LogTemp, Display, TEXT("Value 2: %i"), Value2);
 
     // Debug printing of the parsed values
     if (GEngine && ValueWasSet)
@@ -509,9 +525,40 @@ void ABoard::RestoreBoard()
 
 bool ABoard::ValidInputAI(FString& input)
 {
+
+    TArray<int> TempInts = ParseInputMove(input);
+
+    if (TempInts[0] < 0 || TempInts[0] >= Board.Num()) {
+        return false; // Row index out of bounds
+    }
+
+    if (TempInts[1] < 0 || TempInts[1] >= Board[TempInts[0]].Columns.Num())
+    {
+        return false; // Column index out of bounds
+    }
+
     if (takenListFull.Contains(input) == true)
     {
         return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+bool ABoard::CellExist(FString Field)
+{
+
+    TArray<int> TempInts = ParseInputMove(Field);
+
+    if (TempInts[0] < 0 || TempInts[0] >= Board.Num()) {
+        return false; // Row index out of bounds
+    }
+
+    if (TempInts[1] < 0 || TempInts[1] >= Board[TempInts[0]].Columns.Num())
+    {
+        return false; // Column index out of bounds
     }
     else
     {
