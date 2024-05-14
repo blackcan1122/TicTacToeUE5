@@ -20,7 +20,7 @@ UTileMarks::UTileMarks()
     {
         // Set the static mesh for this component
         SetStaticMesh(StaticMeshAsset.Object);
-        UE_LOG(LogTemp, Warning, TEXT("FOUND"));
+        //UE_LOG(LogTemp, Warning, TEXT("FOUND"));
     }
     else
     {

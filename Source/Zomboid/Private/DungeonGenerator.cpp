@@ -64,7 +64,6 @@ void ADungeonGenerator::SpawnDungeonTiles(int Amount)
 			ADungeonTile* NewTile = nullptr;
 			while (OnlyOneExit) // check if the Choosen Tile has more than one Exit
 			{
-				bool CorrectPosition = false;
 				int RandomChoice = FMath::RandRange(0, AvaiableTiles.Num() - 1);
 
 				UE_LOG(LogTemp, Warning, TEXT("The Amount of AvaiableTiles are :%d"), AvaiableTiles.Num());
@@ -247,17 +246,26 @@ FVector ADungeonGenerator::SetPositionAndRotation(ADungeonTile* NewTile)
 		{
 			RandomPick = FMath::RandRange(0, LM_MarkDirectionPosition.Num() - 1);
 			Instruction = *PlacementDirection.Find(LM_MarkDirectionPosition[RandomPick]);
+			Instruction = (Instruction * 2) + LastMadeActTransform.GetLocation();
 
-		} while (!StopBackwards(LM_MarkDirectionPosition[RandomPick]));
-		Instruction = (Instruction * 2) + LastMadeActTransform.GetLocation();
+		} while (!CheckValidPosition(Instruction));
+
 
 		NewTile->SetActorLocation(Instruction);
 		NewActTransform = NewTile->GetActorTransform();
+		bool WrongRotation = true;
+		if (!CheckCorrectOrientation(NewTile))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Something Went Horrible Wrong"));
+			NewTile->Tags.Add("UUUUWWUUUUU NOOOO");
+			return FVector(0, 0, 180);
+		}
 
 		LastInstruction = LM_MarkDirectionPosition[RandomPick];
 	}
 	else if (New_MarkDirectionPosition.Num() == 1)
 	{
+		// For DeadEnds and Beginning
 		Instruction = *PlacementDirection.Find(LM_MarkDirectionPosition[0]);
 		NewTile->SetActorLocation(FVector(0, 0, 0));
 	}
@@ -272,26 +280,56 @@ int ADungeonGenerator::CheckForAmountOfExits(ADungeonTile* TileToCheck)
 }
 
 
-bool ADungeonGenerator::StopBackwards(FString Instruction)
+bool ADungeonGenerator::CheckValidPosition(FVector PossibleCoords)
 { 
-	TArray<FString> TempArray;
-	PlacementDirection.GenerateKeyArray(TempArray);
-
-	int LastInstructionIndex = TempArray.Find(LastInstruction);
-	int NewInstructionIndex = TempArray.Find(Instruction);
-
-	if (LastInstructionIndex == NewInstructionIndex - 2 || LastInstructionIndex == NewInstructionIndex + 2)
+	for (TActorIterator<ADungeonTile> itr(GetWorld()); itr; ++itr)
 	{
-		return false;
+		if (PossibleCoords == itr->GetActorLocation())
+		{
+			return false;
+		}
 	}
-	else
-	{
-		return true;
-	}
-
+	return true;
 }
 
 bool ADungeonGenerator::CheckCorrectOrientation(ADungeonTile* NewTile)
 {
+	int i = 0;
+	bool NotFound = true;
+	do
+	{
 
+		TArray<UTileMarks*> TempMarks = NewTile->GetFreeExits();
+		TArray<FVector> TempWorldPosMarks;
+		TempWorldPosMarks.Empty();
+		for (const auto& Mark : TempMarks)
+		{
+			TempWorldPosMarks.Add(Mark->GetComponentLocation());
+		}
+		for (const auto& MarkOldTile : LM_MarkWorldPositions)
+		{
+			for (const auto& MarkNewTile : TempWorldPosMarks)
+			{
+				FVector Distance = MarkOldTile - MarkNewTile;
+				Distance.Length();
+
+				if (Distance.Length() < 25)
+				{
+					return true;
+				}
+			}
+		}
+
+		FRotator CurrentRotation = NewTile->GetActorRotation();
+		NewTile->SetActorRelativeRotation(CurrentRotation + FRotator(0, 90, 0));
+		++i;
+
+		if (i == 4)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("NoRotation That Matches Was Found"));
+			NotFound = false;
+		}
+
+	} while (NotFound);
+	return false;
 }

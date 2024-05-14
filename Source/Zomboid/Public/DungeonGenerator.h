@@ -110,7 +110,7 @@ public:
 	int CheckForAmountOfExits(ADungeonTile* TileToCheck);
 
 	UFUNCTION()
-	bool StopBackwards(FString Instruction);
+	bool CheckValidPosition(FVector PossibleCoords);
 
 	UFUNCTION()
 	bool CheckCorrectOrientation(ADungeonTile* NewTile);
