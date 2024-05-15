@@ -34,7 +34,7 @@ void ADungeonTile::SetNumberOfExits()
 
 	for (auto Mark : Components)
 	{
-		EMarkType Temp = Mark->CurrentMarktype;
+		EMarkType Temp = Mark->CurrentConnectionType.CurrentMarkType;
 		if (Temp == EMarkType::Free)
 		{
 			FreeExists.Add(Mark);

@@ -15,7 +15,22 @@ UENUM(BlueprintType)
 enum class EMarkType : uint8
 {
 	Free UMETA(DisplayName = "Free Access"),
-	Wall UMETA(DisplayName = "Blocked Wall")
+	Wall UMETA(DisplayName = "Blocked Wall"),
+	InUse UMETA(DisplayName = "IsConnected")
+};
+
+USTRUCT(BlueprintType)
+struct ZOMBOID_API FMarkConnection
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	EMarkType CurrentMarkType;
+
+	UPROPERTY(VisibleAnywhere)
+	ADungeonTile* ConnectedTo = nullptr;
+
+
 };
 
 // Forward Declarations
@@ -26,6 +41,7 @@ UCLASS()
 class ZOMBOID_API ADungeonGenerator : public AActor
 {
 	GENERATED_BODY()
+
 	
 public:	
 	// Sets default values for this actor's properties
@@ -44,12 +60,6 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
-	TMap<FString,FVector> PlacementDirection;
-
-	UPROPERTY()
-	TMap<FString, FVector> InversedPlacementDirection;
-
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -65,12 +75,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<ADungeonTile*> Neighbors;
-
-	UPROPERTY(VisibleAnywhere)
-	TArray<FString> LM_MarkDirectionPosition;
-
-	UPROPERTY(VisibleAnywhere)
-	TArray<FString> New_MarkDirectionPosition;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FVector> LM_MarkWorldPositions;
@@ -104,7 +108,7 @@ public:
 	void CheckForNeighbors(ADungeonTile* StartPos);
 
 	UFUNCTION()
-	FVector SetPositionAndRotation(ADungeonTile* NewTile);
+	bool SetPositionAndRotation(ADungeonTile* NewTile);
 
 	UFUNCTION()
 	int CheckForAmountOfExits(ADungeonTile* TileToCheck);
@@ -115,9 +119,16 @@ public:
 	UFUNCTION()
 	bool CheckCorrectOrientation(ADungeonTile* NewTile);
 
+	UFUNCTION(CallInEditor)
+	void PrintAllErrorTiles();
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<ADungeonTile*> ProblematicTiles;
+
+	UFUNCTION()
+	void ChooseANewContinue();
+
 	//UFUNCTION()
 	//void DefineValidDirections(ADungeonTile* StartPos);
-
-
 
 };

@@ -18,8 +18,11 @@ public:
 	UTileMarks();
 
 
-	UPROPERTY(EditAnywhere);
-	EMarkType CurrentMarktype;
+	//UPROPERTY(EditAnywhere);
+	//EMarkType CurrentMarktype;
+
+	UPROPERTY(EditAnywhere)
+	FMarkConnection CurrentConnectionType;
 
 	UStaticMesh* ConstructorMesh;
 

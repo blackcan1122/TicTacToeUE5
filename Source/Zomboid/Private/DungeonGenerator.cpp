@@ -3,6 +3,7 @@
 #include "DungeonGenerator.h"
 #include "TileMarks.h"
 #include "DungeonTile.h"
+#include "RenderingThread.h"
 
 
 
@@ -12,13 +13,11 @@ ADungeonGenerator::ADungeonGenerator()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	PlacementDirection = {
-	{"FORWARD", FVector(150, 0, 0)},
-	{"RIGHT", FVector(0, 150, 0)},
-	{"BACKWARDS", FVector(-150, 0, 0)},
-	{"LEFT", FVector(0, -150, 0)}
-	};
+	LastPieceMade = nullptr;
 
+	PickedClass = nullptr;
+
+	PositionOffsetDungeonTile = 0;
 }
 
 // Called when the game starts or when spawned
@@ -54,7 +53,6 @@ void ADungeonGenerator::SpawnDungeonTiles(int Amount)
 	}
 
 	FVector StartPosition = FVector(0, 0, 0);
-	int MaxAmount = AvaiableTiles.Num() - 1;
 
 	for (int i = 0; i < Amount; i++)
 	{
@@ -62,15 +60,19 @@ void ADungeonGenerator::SpawnDungeonTiles(int Amount)
 		{
 			bool OnlyOneExit = true;
 			ADungeonTile* NewTile = nullptr;
-			while (OnlyOneExit) // check if the Choosen Tile has more than one Exit
-			{
-				int RandomChoice = FMath::RandRange(0, AvaiableTiles.Num() - 1);
 
-				UE_LOG(LogTemp, Warning, TEXT("The Amount of AvaiableTiles are :%d"), AvaiableTiles.Num());
+			// Array to make sure that a Not Valid Piece will be picked infinitley
+			TArray<TSubclassOf<ADungeonTile>> TileList = AvaiableTiles;
+
+			while (OnlyOneExit && TileList.Num() != 0) // check if the Choosen Tile has more than one Exit
+			{
+				int RandomChoice = FMath::RandRange(0, TileList.Num() - 1);
+
+				UE_LOG(LogTemp, Warning, TEXT("The Amount of AvaiableTiles are :%d"), TileList.Num());
 				UE_LOG(LogTemp, Warning, TEXT("The Random Choice was :%d"), RandomChoice);
 
 
-				PickedClass = AvaiableTiles[RandomChoice];
+				PickedClass = TileList[RandomChoice];
 				NewTile = CurrentWorld->SpawnActor<ADungeonTile>(PickedClass);
 
 				if (CheckForAmountOfExits(NewTile) > 1)
@@ -80,6 +82,7 @@ void ADungeonGenerator::SpawnDungeonTiles(int Amount)
 				else
 				{
 					CurrentWorld->DestroyActor(NewTile);
+					TileList.RemoveAt(RandomChoice);
 				}
 			}
 			if (NewTile != nullptr)
@@ -91,7 +94,13 @@ void ADungeonGenerator::SpawnDungeonTiles(int Amount)
 					if (CheckPossiblePositions(LastPieceMade, NewTile))
 					{
 						// If Every Mark of the LastPieceMade and the NewTile could be parsed correctly
-						SetPositionAndRotation(NewTile);
+						if (SetPositionAndRotation(NewTile) == false)
+						{
+							NewTile->Tags.Add(FName("This One Has To Go Somewhere Else"));
+							ChooseANewContinue();
+							CheckPossiblePositions(LastPieceMade, NewTile);
+							SetPositionAndRotation(NewTile);
+						}
 
 					}
 					else
@@ -144,10 +153,7 @@ bool ADungeonGenerator::CheckPossiblePositions(ADungeonTile* LastMadePiece, ADun
 	/*
 	Clearing Variables to Fill for those two Specific Tiles
 	*/
-	LM_MarkWorldPositions.Empty();
-	New_MarkWorldPositions.Empty();
-	LM_MarkDirectionPosition.Empty();
-	New_MarkDirectionPosition.Empty();
+
 	LM_MarkWorldPositions.Empty();
 	New_MarkWorldPositions.Empty();
 	LastMadeFreeExits.Empty();
@@ -157,22 +163,12 @@ bool ADungeonGenerator::CheckPossiblePositions(ADungeonTile* LastMadePiece, ADun
 	Getting All Infos on the Last Made Piece
 	*/
 	LastMadeActTransform = LastMadePiece->GetActorTransform();
+	LastMadeActTransform = LastMadePiece->GetActorTransform();
 	LastMadeFreeExits = LastMadePiece->GetFreeExits();
 	// Looping through all Free Exits and Saving their World Positions
 	for (auto FreeExits : LastMadeFreeExits)
 	{
 		LM_MarkWorldPositions.Add(FreeExits->GetComponentLocation());
-
-		if (PlacementDirection.FindKey(FreeExits->GetRelativeLocation()) != nullptr)
-		{
-			FString TempString = *PlacementDirection.FindKey(FreeExits->GetRelativeLocation());
-			LM_MarkDirectionPosition.Add(TempString);
-
-		}
-		else
-		{
-			return false;
-		}
 	}
 
 	/*
@@ -183,16 +179,6 @@ bool ADungeonGenerator::CheckPossiblePositions(ADungeonTile* LastMadePiece, ADun
 	for (auto FreeExits : NewFreeExits)
 	{
 		New_MarkWorldPositions.Add(FreeExits->GetComponentLocation());
-
-		if (PlacementDirection.FindKey(FreeExits->GetRelativeLocation()) != nullptr)
-		{
-			FString TempString = *PlacementDirection.FindKey(FreeExits->GetRelativeLocation());
-			New_MarkDirectionPosition.Add(TempString);
-		}
-		else
-		{
-			return false;
-		}
 	}
 
 
@@ -236,17 +222,33 @@ void ADungeonGenerator::CheckForNeighbors(ADungeonTile* StartPos)
 }
 
 
-FVector ADungeonGenerator::SetPositionAndRotation(ADungeonTile* NewTile)
+bool ADungeonGenerator::SetPositionAndRotation(ADungeonTile* NewTile)
 {
 	int RandomPick = INT_MIN;
 	FVector Instruction;
-	if (New_MarkDirectionPosition.Num() > 1)
+	if (New_MarkWorldPositions.Num() > 1)
 	{
+		TArray<FVector> PossibleWorldPosLM = LM_MarkWorldPositions;
 		do
 		{
-			RandomPick = FMath::RandRange(0, LM_MarkDirectionPosition.Num() - 1);
-			Instruction = *PlacementDirection.Find(LM_MarkDirectionPosition[RandomPick]);
-			Instruction = (Instruction * 2) + LastMadeActTransform.GetLocation();
+			RandomPick = FMath::RandRange(0, PossibleWorldPosLM.Num() - 1);
+			Instruction = PossibleWorldPosLM[RandomPick];
+			Instruction = Instruction - LastMadeActTransform.GetLocation();
+			Instruction = Instruction * 2;
+			Instruction = Instruction + LastMadeActTransform.GetLocation();
+
+			if (!CheckValidPosition(Instruction))
+			{
+				PossibleWorldPosLM.RemoveAt(RandomPick);
+				if (PossibleWorldPosLM.Num() == 0)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Something Went Horrible Wrong No correct Instructions Was found"));
+					NewTile->Tags.Add("No correct Instructions Was found");
+					FName NameOfLastPiece = FName(*LastPieceMade->GetName());
+					NewTile->Tags.Add(NameOfLastPiece);
+					return false;
+				}
+			}
 
 		} while (!CheckValidPosition(Instruction));
 
@@ -258,20 +260,17 @@ FVector ADungeonGenerator::SetPositionAndRotation(ADungeonTile* NewTile)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Something Went Horrible Wrong"));
 			NewTile->Tags.Add("UUUUWWUUUUU NOOOO");
-			return FVector(0, 0, 180);
+			return false;
 		}
-
-		LastInstruction = LM_MarkDirectionPosition[RandomPick];
 	}
-	else if (New_MarkDirectionPosition.Num() == 1)
+	else if (New_MarkWorldPositions.Num() == 1)
 	{
 		// For DeadEnds and Beginning
-		Instruction = *PlacementDirection.Find(LM_MarkDirectionPosition[0]);
 		NewTile->SetActorLocation(FVector(0, 0, 0));
 	}
 
 
-	return Instruction;
+	return true;
 }
 
 int ADungeonGenerator::CheckForAmountOfExits(ADungeonTile* TileToCheck)
@@ -284,7 +283,10 @@ bool ADungeonGenerator::CheckValidPosition(FVector PossibleCoords)
 { 
 	for (TActorIterator<ADungeonTile> itr(GetWorld()); itr; ++itr)
 	{
-		if (PossibleCoords == itr->GetActorLocation())
+
+		FVector Distance = PossibleCoords - itr->GetActorLocation();
+
+		if (Distance.Length() < 150)
 		{
 			return false;
 		}
@@ -296,25 +298,29 @@ bool ADungeonGenerator::CheckCorrectOrientation(ADungeonTile* NewTile)
 {
 	int i = 0;
 	bool NotFound = true;
+
+	TArray<UTileMarks*> TempMarksNewTile = NewTile->GetFreeExits();
+	TArray<UTileMarks*> TempMarksOldTile = LastMadeFreeExits;
 	do
 	{
-
-		TArray<UTileMarks*> TempMarks = NewTile->GetFreeExits();
-		TArray<FVector> TempWorldPosMarks;
-		TempWorldPosMarks.Empty();
-		for (const auto& Mark : TempMarks)
+		for (const auto& MarkOldTile : TempMarksOldTile)
 		{
-			TempWorldPosMarks.Add(Mark->GetComponentLocation());
-		}
-		for (const auto& MarkOldTile : LM_MarkWorldPositions)
-		{
-			for (const auto& MarkNewTile : TempWorldPosMarks)
+			for (const auto& MarkNewTile : TempMarksNewTile)
 			{
-				FVector Distance = MarkOldTile - MarkNewTile;
+
+				MarkOldTile->GetComponentLocation();
+				MarkNewTile->GetComponentLocation();
+
+				FVector Distance = MarkOldTile->GetComponentLocation() - MarkNewTile->GetComponentLocation();
 				Distance.Length();
 
 				if (Distance.Length() < 25)
 				{
+					MarkOldTile->CurrentConnectionType.CurrentMarkType = EMarkType::InUse;
+					MarkOldTile->CurrentConnectionType.ConnectedTo = NewTile;
+					MarkNewTile->CurrentConnectionType.CurrentMarkType = EMarkType::InUse;
+					MarkNewTile->CurrentConnectionType.ConnectedTo = LastPieceMade;
+
 					return true;
 				}
 			}
@@ -332,4 +338,48 @@ bool ADungeonGenerator::CheckCorrectOrientation(ADungeonTile* NewTile)
 
 	} while (NotFound);
 	return false;
+}
+
+
+void ADungeonGenerator::PrintAllErrorTiles()
+{
+	ProblematicTiles.Empty();
+	for (TActorIterator<ADungeonTile> itr(GetWorld()); itr; ++itr)
+	{
+		if (itr->ActorHasTag(FName("Something Went Horrible Wrong")) || itr->ActorHasTag(FName("No correct Instructions Was found")))
+		{
+			ProblematicTiles.Add(*itr);
+		}
+	}
+}
+
+void ADungeonGenerator::ChooseANewContinue()
+{
+	TArray<ADungeonTile*> PotentialFreeTiles;
+	for (TActorIterator<ADungeonTile> itr(GetWorld()); itr; ++itr)
+	{
+		if (itr->GetFreeExits().Num() > 0)
+		{
+			for (auto PotentialMark : itr->GetFreeExits())
+			{
+				FVector WorldPosOfMark = PotentialMark->GetComponentLocation();
+				FVector WorldPosOfActor = itr->GetActorLocation();
+
+				FVector Instruction = WorldPosOfMark - WorldPosOfActor;
+				Instruction = Instruction * 2;
+				Instruction = Instruction + WorldPosOfActor;
+				if (CheckValidPosition(Instruction))
+				{
+					PotentialFreeTiles.Add(*itr);
+				}
+			}
+
+		}
+	}
+
+	int RandomPick = FMath::RandRange(0, PotentialFreeTiles.Num() - 1);
+
+	LastPieceMade = PotentialFreeTiles[RandomPick];
+
+
 }
