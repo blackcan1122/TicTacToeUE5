@@ -30,7 +30,7 @@ public:
 	UFUNCTION()
 	void SetNumberOfExits();
 
-	UFUNCTION()
+	UFUNCTION(CallInEditor)
 	TArray<UTileMarks*> GetFreeExits();
 
 };

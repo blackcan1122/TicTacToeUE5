@@ -47,9 +47,6 @@ public:
 	// Sets default values for this actor's properties
 	ADungeonGenerator();
 
-	UFUNCTION(CallInEditor)
-	void Prepare();
-
 	UFUNCTION(BlueprintCallable)
 	void SpawnDungeonTiles(int Amount);
 
@@ -128,7 +125,25 @@ public:
 	UFUNCTION()
 	void ChooseANewContinue();
 
-	//UFUNCTION()
-	//void DefineValidDirections(ADungeonTile* StartPos);
+	UFUNCTION()
+	bool SpawnDeadEnds();
+
+	UFUNCTION()
+	bool SpawnNextTile();
+
+	UFUNCTION()
+	ADungeonTile* ReturnTileAboveExits(UWorld* CurrentWorld, int AboveAmount);
+
+	UFUNCTION()
+	bool ProcessNewTile(ADungeonTile* NewTile, int iteration);
+
+	UFUNCTION()
+	bool CheckIfAllMarksConnected(ADungeonTile* StartPos);
+
+	UFUNCTION()
+	float IsWithinDistance(const FVector& Pos1, const FVector& Pos2);
+
+	UPROPERTY(EditAnywhere)
+	ADungeonTile* FallBackSolution;
 
 };

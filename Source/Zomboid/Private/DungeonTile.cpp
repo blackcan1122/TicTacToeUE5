@@ -45,6 +45,6 @@ void ADungeonTile::SetNumberOfExits()
 
 TArray<UTileMarks*> ADungeonTile::GetFreeExits()
 {
+	SetNumberOfExits();
 	return FreeExists;
-
 }
