@@ -506,9 +506,18 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 		TArray<UTileMarks*>Exits = ReturnAllMarksOfNeighbors(Actor);
 
 		TArray<UTileMarks*>FreeExits;
+		FreeExits.Empty();
+
+		for (auto& Exit : Exits)
+		{
+			if (Exit->CurrentConnectionType.CurrentMarkType == EMarkType::Free || Exit->CurrentConnectionType.CurrentMarkType == EMarkType::InUse)
+			{
+				FreeExits.Add(Exit);
+			}
+		}
 
 		ADungeonTile* NewTile = nullptr;
-		NewTile = ReturnTileAboveExits(CurrentWorld, Exits.Num());
+		NewTile = ReturnTileAboveExits(CurrentWorld, FreeExits.Num());
 
 		if (NewTile == nullptr)
 		{
@@ -518,17 +527,47 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 		NewTile->SetActorLocation(ActorLocation);
 
 		TArray<UTileMarks*> TempMarkArray;
-		NewTile->GetComponents<UTileMarks>(TempMarkArray);
-		for (auto& Mark : TempMarkArray)
-		{
-						
+		TempMarkArray.Empty();
+		TempMarkArray = NewTile->GetFreeExits();
 
-		}
 		FRotator StartRot = FRotator(0, 0, 0);
+		bool CheckForAll;
 
+		for (int i = 0; i <= 4; i++)
+		{
+			NewTile->SetActorRotation(StartRot);
+			CheckForAll = true;
 
+			for (auto& Mark : TempMarkArray)
+			{
+				for (const auto& Exit : FreeExits)
+				{
+					if (IsWithinDistance(Mark->GetComponentLocation(), Exit->GetComponentLocation()) < 10 && Mark->CurrentConnectionType.CurrentMarkType == EMarkType::Free)
+					{
 
+					}
+					else
+					{
+						CheckForAll = false;
+					}
+				}
+			}
+			if (CheckForAll == true)
+			{
+				break;
+			}
+			else
+			{
+				StartRot = StartRot + FRotator(0, 90, 0);
+			}
+		}
 	}
+	for (auto& Actor : ActorsToFix)
+	{
+		CurrentWorld->DestroyActor(Actor);
+	}
+	ActorsToFix.Empty();
+	return true;
 }
 
 /*

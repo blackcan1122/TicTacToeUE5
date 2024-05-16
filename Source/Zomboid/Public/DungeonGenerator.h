@@ -146,7 +146,7 @@ public:
 	UFUNCTION()
 	void GatherActorToFix(const TArray<ADungeonTile*>& ActorsToCheck);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	bool FixAllEncaplsuledActors();
 
 	UFUNCTION()
