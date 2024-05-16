@@ -27,10 +27,17 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	TArray<UTileMarks*> FreeExists;
 
+	UPROPERTY(VisibleAnywhere)
+	TArray<UTileMarks*> InUseExists;
+
 	UFUNCTION()
 	void SetNumberOfExits();
 
-	UFUNCTION(CallInEditor)
+
+	UFUNCTION(BlueprintCallable)
 	TArray<UTileMarks*> GetFreeExits();
+
+	UFUNCTION(BlueprintCallable)
+	TArray<UTileMarks*> GetInUseExits();
 
 };

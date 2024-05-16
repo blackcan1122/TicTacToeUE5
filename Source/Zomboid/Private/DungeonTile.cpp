@@ -27,8 +27,8 @@ void ADungeonTile::PostInitializeComponents()
 
 void ADungeonTile::SetNumberOfExits()
 {
+	InUseExists.Empty();
 	FreeExists.Empty();
-	NumberOfExits = 0;
 	TArray<UTileMarks*> Components;
 	this->GetComponents<UTileMarks>(Components);
 
@@ -38,7 +38,10 @@ void ADungeonTile::SetNumberOfExits()
 		if (Temp == EMarkType::Free)
 		{
 			FreeExists.Add(Mark);
-			NumberOfExits++;
+		}
+		else if (Temp == EMarkType::InUse)
+		{
+			InUseExists.Add(Mark);
 		}
 	}
 }
@@ -47,4 +50,10 @@ TArray<UTileMarks*> ADungeonTile::GetFreeExits()
 {
 	SetNumberOfExits();
 	return FreeExists;
+}
+
+TArray<UTileMarks*> ADungeonTile::GetInUseExits()
+{
+	SetNumberOfExits();
+	return InUseExists;
 }

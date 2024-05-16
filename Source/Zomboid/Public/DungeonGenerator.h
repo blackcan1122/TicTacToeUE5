@@ -150,15 +150,18 @@ public:
 	bool FixAllEncaplsuledActors();
 
 	UFUNCTION()
-	TArray<UTileMarks*> ReturnAllMarksOfNeighbors(const ADungeonTile* StartTile);
+	TArray<UTileMarks*> ReturnAdjacentMarksOfNeighbors(const ADungeonTile* StartTile);
 
 	UPROPERTY(EditAnywhere)
-	ADungeonTile* FallBackSolution;
+	TSubclassOf<ADungeonTile> FallBackSolution;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<ADungeonTile*> ActorsToFix;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<ADungeonTile*> ActorsToContinueBranching;
+
+	UFUNCTION()
+	ADungeonTile* ReturnTileWithAmountOfExits(UWorld* CurrentWorld, int Amount);
 
 };

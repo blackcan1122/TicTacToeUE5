@@ -345,12 +345,12 @@ bool ADungeonGenerator::SpawnDeadEnds()
 	{
 		ADungeonTile* NewTile = GetWorld()->SpawnActor<ADungeonTile>(Element);
 
-		if (NewTile->NumberOfExits != 1)
+		if (NewTile->GetFreeExits().Num() != 1)
 		{
 			NewTile->Tags.Add(FName("SHITTY MC DUDEL"));
 			GetWorld()->DestroyActor(NewTile);
 		}
-		else if (NewTile->NumberOfExits == 1)
+		else if (NewTile->GetFreeExits().Num() == 1)
 		{
 			//NewTile->SetActorLocation(StartPosition);
 			NewTile->Tags.Add(FName("ERSTER!!!111!!"));
@@ -388,7 +388,8 @@ ADungeonTile* ADungeonGenerator::ReturnTileAboveExits(UWorld* CurrentWorld, int 
 		}
 	
 	}
-	return FallBackSolution;
+	ADungeonTile* NewTile = CurrentWorld->SpawnActor<ADungeonTile>(FallBackSolution);
+	return NewTile;
 }
 
 
@@ -461,7 +462,6 @@ bool ADungeonGenerator::CheckIfAllMarksConnected(ADungeonTile* StartPos)
 	{
 		return false;
 	}
-	//@todo: Should Add all Actors which return false into a Array to Either Fix them or Building Branching Corridors
 	
 }
 
@@ -474,6 +474,7 @@ float ADungeonGenerator::IsWithinDistance(const FVector& Pos1, const FVector& Po
 
 void ADungeonGenerator::GatherActorToFix(const TArray<ADungeonTile*>& ActorsToCheck)
 {
+	//@todo need to improve this function to only Consider Tiles for ActorsToContinueBranching when they have also a OpenSpot which is not Connected to a Neighbor
 	ActorsToFix.Empty();
 	ActorsToContinueBranching.Empty();
 
@@ -489,6 +490,7 @@ void ADungeonGenerator::GatherActorToFix(const TArray<ADungeonTile*>& ActorsToCh
 			ActorsToContinueBranching.Add(Actor);
 		}
 	}
+
 }
 
 //@todo: when CheckCorrectOrientation is Refactored update this
@@ -500,14 +502,17 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 		return false;
 	}
 
+	// Iterating Through every Actor which needs Fixing
 	for (auto& Actor : ActorsToFix)
 	{
+
 		FVector ActorLocation = Actor->GetActorLocation();
-		TArray<UTileMarks*>Exits = ReturnAllMarksOfNeighbors(Actor);
+		TArray<UTileMarks*>Exits = ReturnAdjacentMarksOfNeighbors(Actor); // Getting All Marks of Neighbor Tiles which are next to the Starting Tile 
 
 		TArray<UTileMarks*>FreeExits;
 		FreeExits.Empty();
 
+		// Only Considering Marks which are either Free or InUse
 		for (auto& Exit : Exits)
 		{
 			if (Exit->CurrentConnectionType.CurrentMarkType == EMarkType::Free || Exit->CurrentConnectionType.CurrentMarkType == EMarkType::InUse)
@@ -516,8 +521,10 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 			}
 		}
 
+		//@todo: Need to Implement a Function which can detect Corners (Since Corner and Hallways both have 2 Exits)
+		// Creating a Tile with the Exact amount of Exits we need
 		ADungeonTile* NewTile = nullptr;
-		NewTile = ReturnTileAboveExits(CurrentWorld, FreeExits.Num());
+		NewTile = ReturnTileWithAmountOfExits(CurrentWorld, FreeExits.Num());
 
 		if (NewTile == nullptr)
 		{
@@ -526,17 +533,18 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 
 		NewTile->SetActorLocation(ActorLocation);
 
+		// Iterating through to Find a Correct Orientation
 		TArray<UTileMarks*> TempMarkArray;
 		TempMarkArray.Empty();
 		TempMarkArray = NewTile->GetFreeExits();
 
 		FRotator StartRot = FRotator(0, 0, 0);
-		bool CheckForAll;
+		int CorrectMarks;
 
-		for (int i = 0; i <= 4; i++)
+		for (int i = 0; i < 4; i++)
 		{
 			NewTile->SetActorRotation(StartRot);
-			CheckForAll = true;
+			CorrectMarks = 0;
 
 			for (auto& Mark : TempMarkArray)
 			{
@@ -544,15 +552,11 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 				{
 					if (IsWithinDistance(Mark->GetComponentLocation(), Exit->GetComponentLocation()) < 10 && Mark->CurrentConnectionType.CurrentMarkType == EMarkType::Free)
 					{
-
-					}
-					else
-					{
-						CheckForAll = false;
+						++CorrectMarks;
 					}
 				}
 			}
-			if (CheckForAll == true)
+			if (CorrectMarks == 3)
 			{
 				break;
 			}
@@ -562,6 +566,7 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 			}
 		}
 	}
+
 	for (auto& Actor : ActorsToFix)
 	{
 		CurrentWorld->DestroyActor(Actor);
@@ -573,7 +578,7 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 /*
 	Function to Get Adjecent Free UTileMarks to Consider the Amount of Free Exits we Need in this Specific Spot
 */
-TArray<UTileMarks*> ADungeonGenerator::ReturnAllMarksOfNeighbors(const ADungeonTile* StartTile)
+TArray<UTileMarks*> ADungeonGenerator::ReturnAdjacentMarksOfNeighbors(const ADungeonTile* StartTile)
 {
 	// Calculated The Neighbors of Specific Start Pos
 	CheckForNeighbors(StartTile);
@@ -584,6 +589,7 @@ TArray<UTileMarks*> ADungeonGenerator::ReturnAllMarksOfNeighbors(const ADungeonT
 	TArray<UTileMarks*> TempMarkArray;
 	StartTile->GetComponents<UTileMarks>(TempMarkArray);
 	TArray<UTileMarks*> ReturnArray;
+	TArray<UTileMarks*> MarkArray;
 
 	// Gathering the World Space Locations of ALL Marks of the StartTile, which we will use to Check the Neighbor Tiles
 	for (const auto& Mark : TempMarkArray)
@@ -593,9 +599,13 @@ TArray<UTileMarks*> ADungeonGenerator::ReturnAllMarksOfNeighbors(const ADungeonT
 
 	// Looping through All Neighbors, for each looping through their Marks and see if any marks of the Neighbor
 	// Is Near of any of the Search Locations
+	ReturnArray.Empty();
 	for (const auto& Neighbor : Neighbors)
 	{
-		for (const auto& Mark : Neighbor->GetFreeExits())
+		MarkArray.Append(Neighbor->GetFreeExits());
+		MarkArray.Append(Neighbor->GetInUseExits());
+
+		for (const auto& Mark : MarkArray)
 		{
 			for (const auto& SearchLocation : SearchLocations)
 			{
@@ -606,7 +616,31 @@ TArray<UTileMarks*> ADungeonGenerator::ReturnAllMarksOfNeighbors(const ADungeonT
 
 			}
 		}
+		MarkArray.Empty();
 	}
 
 	return ReturnArray;
+}
+
+
+ADungeonTile* ADungeonGenerator::ReturnTileWithAmountOfExits(UWorld* CurrentWorld, int Amount)
+{
+	ADungeonTile* NewTile;
+	for (auto Element : AvaiableTiles)
+	{
+		NewTile = CurrentWorld->SpawnActor<ADungeonTile>(Element);
+
+		TArray<UTileMarks*> Exits = NewTile->GetFreeExits();
+
+		if (Exits.Num() == Amount)
+		{
+			return NewTile;
+		}
+		else
+		{
+			CurrentWorld->DestroyActor(NewTile);
+		}
+	}
+	NewTile = CurrentWorld->SpawnActor<ADungeonTile>(FallBackSolution);
+	return NewTile;
 }
