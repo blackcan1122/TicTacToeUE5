@@ -102,7 +102,7 @@ public:
 	bool CheckPossiblePositions(ADungeonTile* LastMadePiece, ADungeonTile* PotentialNewTile);
 
 	UFUNCTION(BlueprintCallable)
-	void CheckForNeighbors(ADungeonTile* StartPos);
+	void CheckForNeighbors(const ADungeonTile* StartPos);
 
 	UFUNCTION()
 	bool SetPositionAndRotation(ADungeonTile* NewTile);
@@ -143,7 +143,22 @@ public:
 	UFUNCTION()
 	float IsWithinDistance(const FVector& Pos1, const FVector& Pos2);
 
+	UFUNCTION()
+	void GatherActorToFix(const TArray<ADungeonTile*>& ActorsToCheck);
+
+	UFUNCTION()
+	bool FixAllEncaplsuledActors();
+
+	UFUNCTION()
+	TArray<UTileMarks*> ReturnAllMarksOfNeighbors(const ADungeonTile* StartTile);
+
 	UPROPERTY(EditAnywhere)
 	ADungeonTile* FallBackSolution;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<ADungeonTile*> ActorsToFix;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<ADungeonTile*> ActorsToContinueBranching;
 
 };

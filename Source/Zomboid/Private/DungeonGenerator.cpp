@@ -79,13 +79,20 @@ void ADungeonGenerator::SpawnDungeonTiles(int Amount)
 		// The Offset for Placing the New Tiles
 	}
 
+	TArray<ADungeonTile*> PendingFixing;
+
 	for (TActorIterator<ADungeonTile> itr(GetWorld()); itr; ++itr)
 	{
 		if (CheckIfAllMarksConnected(*itr) == false)
 		{
+			PendingFixing.Add(*itr);
+
 			UE_LOG(LogTemp, Warning, TEXT("There Were Some Problems with %s"), *itr->GetName());
 		}
 	}
+
+	GatherActorToFix(PendingFixing);
+
 }
 
 bool ADungeonGenerator::CheckPossiblePositions(ADungeonTile* LastMadePiece, ADungeonTile* PotentialNewTile)
@@ -140,7 +147,7 @@ void ADungeonGenerator::ClearDungeonTiles()
 }
 
 
-void ADungeonGenerator::CheckForNeighbors(ADungeonTile* StartPos)
+void ADungeonGenerator::CheckForNeighbors(const ADungeonTile* StartPos)
 {
 	Neighbors.Empty();
 	float MinDistance = FLT_MAX;
@@ -240,6 +247,7 @@ bool ADungeonGenerator::CheckValidPosition(FVector PossibleCoords)
 	return true;
 }
 
+//@todo: Need to Refactor for Better Modularity
 bool ADungeonGenerator::CheckCorrectOrientation(ADungeonTile* NewTile)
 {
 	int i = 0;
@@ -462,4 +470,104 @@ float ADungeonGenerator::IsWithinDistance(const FVector& Pos1, const FVector& Po
 {
 	FVector Distance = Pos1 - Pos2;
 	return Distance.Length();
+}
+
+void ADungeonGenerator::GatherActorToFix(const TArray<ADungeonTile*>& ActorsToCheck)
+{
+	ActorsToFix.Empty();
+	ActorsToContinueBranching.Empty();
+
+	for (const auto& Actor : ActorsToCheck)
+	{
+		CheckForNeighbors(Actor);
+		if (Neighbors.Num() == 4)
+		{
+			ActorsToFix.Add(Actor);
+		}
+		else
+		{
+			ActorsToContinueBranching.Add(Actor);
+		}
+	}
+}
+
+//@todo: when CheckCorrectOrientation is Refactored update this
+bool ADungeonGenerator::FixAllEncaplsuledActors()
+{
+	UWorld* CurrentWorld = GetWorld();
+	if (CurrentWorld == nullptr)
+	{
+		return false;
+	}
+
+	for (auto& Actor : ActorsToFix)
+	{
+		FVector ActorLocation = Actor->GetActorLocation();
+		TArray<UTileMarks*>Exits = ReturnAllMarksOfNeighbors(Actor);
+
+		TArray<UTileMarks*>FreeExits;
+
+		ADungeonTile* NewTile = nullptr;
+		NewTile = ReturnTileAboveExits(CurrentWorld, Exits.Num());
+
+		if (NewTile == nullptr)
+		{
+			return false;
+		}
+
+		NewTile->SetActorLocation(ActorLocation);
+
+		TArray<UTileMarks*> TempMarkArray;
+		NewTile->GetComponents<UTileMarks>(TempMarkArray);
+		for (auto& Mark : TempMarkArray)
+		{
+						
+
+		}
+		FRotator StartRot = FRotator(0, 0, 0);
+
+
+
+	}
+}
+
+/*
+	Function to Get Adjecent Free UTileMarks to Consider the Amount of Free Exits we Need in this Specific Spot
+*/
+TArray<UTileMarks*> ADungeonGenerator::ReturnAllMarksOfNeighbors(const ADungeonTile* StartTile)
+{
+	// Calculated The Neighbors of Specific Start Pos
+	CheckForNeighbors(StartTile);
+
+	// Creating some Local Variables
+
+	TArray<FVector> SearchLocations;
+	TArray<UTileMarks*> TempMarkArray;
+	StartTile->GetComponents<UTileMarks>(TempMarkArray);
+	TArray<UTileMarks*> ReturnArray;
+
+	// Gathering the World Space Locations of ALL Marks of the StartTile, which we will use to Check the Neighbor Tiles
+	for (const auto& Mark : TempMarkArray)
+	{
+		SearchLocations.Add(Mark->GetComponentLocation());
+	}
+
+	// Looping through All Neighbors, for each looping through their Marks and see if any marks of the Neighbor
+	// Is Near of any of the Search Locations
+	for (const auto& Neighbor : Neighbors)
+	{
+		for (const auto& Mark : Neighbor->GetFreeExits())
+		{
+			for (const auto& SearchLocation : SearchLocations)
+			{
+				if (IsWithinDistance(Mark->GetComponentLocation(), SearchLocation) < 10)
+				{
+					ReturnArray.Add(Mark);
+				}
+
+			}
+		}
+	}
+
+	return ReturnArray;
 }
