@@ -164,4 +164,7 @@ public:
 	UFUNCTION()
 	ADungeonTile* ReturnTileWithAmountOfExits(UWorld* CurrentWorld, int Amount);
 
+	UFUNCTION(CallInEditor)
+	void DEBUGUpdateFixActor();
+
 };

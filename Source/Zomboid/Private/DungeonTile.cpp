@@ -57,3 +57,12 @@ TArray<UTileMarks*> ADungeonTile::GetInUseExits()
 	SetNumberOfExits();
 	return InUseExists;
 }
+
+TArray<UTileMarks*> ADungeonTile::GetInUseAndFreeExits()
+{
+	SetNumberOfExits();
+	TArray<UTileMarks*> ReturnArray;
+	ReturnArray.Append(FreeExists);
+	ReturnArray.Append(InUseExists);
+	return ReturnArray;
+}

@@ -440,7 +440,7 @@ bool ADungeonGenerator::CheckIfAllMarksConnected(ADungeonTile* StartPos)
 	{
 		for (auto Neighbor : Neighbors)
 		{
-			for (auto& NeighborMark : Neighbor->GetFreeExits())
+			for (auto& NeighborMark : Neighbor->GetInUseAndFreeExits())
 			{
 				if (IsWithinDistance(Mark->GetComponentLocation(), NeighborMark->GetComponentLocation()) < 20)
 				{
@@ -494,6 +494,7 @@ void ADungeonGenerator::GatherActorToFix(const TArray<ADungeonTile*>& ActorsToCh
 }
 
 //@todo: when CheckCorrectOrientation is Refactored update this
+//@todo: Still some Issues with some Cases also it seems like sometimes neighbors gets changed which is really weird
 bool ADungeonGenerator::FixAllEncaplsuledActors()
 {
 	UWorld* CurrentWorld = GetWorld();
@@ -643,4 +644,21 @@ ADungeonTile* ADungeonGenerator::ReturnTileWithAmountOfExits(UWorld* CurrentWorl
 	}
 	NewTile = CurrentWorld->SpawnActor<ADungeonTile>(FallBackSolution);
 	return NewTile;
+}
+
+void ADungeonGenerator::DEBUGUpdateFixActor()
+{
+	TArray<ADungeonTile*> PendingFixing;
+
+	for (TActorIterator<ADungeonTile> itr(GetWorld()); itr; ++itr)
+	{
+		if (CheckIfAllMarksConnected(*itr) == false)
+		{
+			PendingFixing.Add(*itr);
+
+			UE_LOG(LogTemp, Warning, TEXT("There Were Some Problems with %s"), *itr->GetName());
+		}
+	}
+
+	GatherActorToFix(PendingFixing);
 }

@@ -40,4 +40,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	TArray<UTileMarks*> GetInUseExits();
 
+	UFUNCTION(BlueprintCallable)
+	TArray<UTileMarks*> GetInUseAndFreeExits();
+
 };
