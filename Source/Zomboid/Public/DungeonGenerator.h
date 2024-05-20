@@ -149,6 +149,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool FixAllEncaplsuledActors();
 
+	UFUNCTION(BlueprintCallable)
+	bool FixAllOpenEnds();
+
 	UFUNCTION()
 	TArray<UTileMarks*> ReturnAdjacentMarksOfNeighbors(const ADungeonTile* StartTile);
 
@@ -165,6 +168,15 @@ public:
 	ADungeonTile* ReturnTileWithAmountOfExits(UWorld* CurrentWorld, int Amount);
 
 	UFUNCTION(CallInEditor)
-	void DEBUGUpdateFixActor();
+	void UpdateFixActor();
+
+	UFUNCTION()
+	bool DetectHallway(TArray<UTileMarks*> NeighborMarks);
+
+	UPROPERTY(EditAnywhere)
+	TArray<TSubclassOf<ADungeonTile>> CornerPieces;
+
+	UPROPERTY(EditAnywhere)
+	TArray<TSubclassOf<ADungeonTile>> HallwaysPieces;
 
 };

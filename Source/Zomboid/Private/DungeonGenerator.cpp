@@ -79,20 +79,45 @@ void ADungeonGenerator::SpawnDungeonTiles(int Amount)
 		// The Offset for Placing the New Tiles
 	}
 
-	TArray<ADungeonTile*> PendingFixing;
-
-	for (TActorIterator<ADungeonTile> itr(GetWorld()); itr; ++itr)
+	do
 	{
-		if (CheckIfAllMarksConnected(*itr) == false)
+		TArray<ADungeonTile*> PendingFixing;
+
+		for (TActorIterator<ADungeonTile> itr(GetWorld()); itr; ++itr)
 		{
-			PendingFixing.Add(*itr);
+			if (CheckIfAllMarksConnected(*itr) == false)
+			{
+				PendingFixing.Add(*itr);
 
-			UE_LOG(LogTemp, Warning, TEXT("There Were Some Problems with %s"), *itr->GetName());
+				UE_LOG(LogTemp, Warning, TEXT("There Were Some Problems with %s"), *itr->GetName());
+			}
 		}
-	}
+	
 
-	GatherActorToFix(PendingFixing);
+		GatherActorToFix(PendingFixing);
+		FixAllEncaplsuledActors();
+		UpdateFixActor();
+	} while (ActorsToFix.Num() > 0);
 
+	do
+	{
+		TArray<ADungeonTile*> PendingFixing;
+
+		for (TActorIterator<ADungeonTile> itr(GetWorld()); itr; ++itr)
+		{
+			if (CheckIfAllMarksConnected(*itr) == false)
+			{
+				PendingFixing.Add(*itr);
+
+				UE_LOG(LogTemp, Warning, TEXT("There Were Some Problems with %s"), *itr->GetName());
+			}
+		}
+
+
+		GatherActorToFix(PendingFixing);
+		FixAllOpenEnds();
+		UpdateFixActor();
+	} while (ActorsToContinueBranching.Num() > 0);
 }
 
 bool ADungeonGenerator::CheckPossiblePositions(ADungeonTile* LastMadePiece, ADungeonTile* PotentialNewTile)
@@ -525,7 +550,24 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 		//@todo: Need to Implement a Function which can detect Corners (Since Corner and Hallways both have 2 Exits)
 		// Creating a Tile with the Exact amount of Exits we need
 		ADungeonTile* NewTile = nullptr;
-		NewTile = ReturnTileWithAmountOfExits(CurrentWorld, FreeExits.Num());
+		if (FreeExits.Num() == 2 && DetectHallway(FreeExits) == true)
+		{
+			int Randompick = FMath::RandRange(0, CornerPieces.Num() - 1);
+			NewTile = CurrentWorld->SpawnActor<ADungeonTile>(CornerPieces[Randompick]);
+			UE_LOG(LogTemp, Warning, TEXT("There Should be Corner now"));
+
+		}
+		else if (FreeExits.Num() == 2 && DetectHallway(FreeExits) == false)
+		{
+			int Randompick = FMath::RandRange(0, HallwaysPieces.Num() - 1);
+			NewTile = CurrentWorld->SpawnActor<ADungeonTile>(HallwaysPieces[Randompick]);
+			UE_LOG(LogTemp, Warning, TEXT("There Should be Hallway now"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("There Should be Anything Else"));
+			NewTile = ReturnTileWithAmountOfExits(CurrentWorld, FreeExits.Num());
+		}
 
 		if (NewTile == nullptr)
 		{
@@ -557,7 +599,7 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 					}
 				}
 			}
-			if (CorrectMarks == 3)
+			if (CorrectMarks == FreeExits.Num())
 			{
 				break;
 			}
@@ -575,6 +617,108 @@ bool ADungeonGenerator::FixAllEncaplsuledActors()
 	ActorsToFix.Empty();
 	return true;
 }
+
+bool ADungeonGenerator::FixAllOpenEnds()
+{
+	UWorld* CurrentWorld = GetWorld();
+	if (CurrentWorld == nullptr) 
+	{
+		return false;
+	}
+
+	TArray<FVector> PositionsOfActors;
+	for (auto& Actor : ActorsToContinueBranching)
+	{
+		PositionsOfActors.Add(Actor->GetActorLocation());
+	}
+
+	for (int i = 0 ; i < PositionsOfActors.Num(); i++)
+	{
+		TArray<UTileMarks*>Exits = ReturnAdjacentMarksOfNeighbors(ActorsToContinueBranching[i]); // Getting All Marks of Neighbor Tiles which are next to the Starting Tile 
+
+		TArray<UTileMarks*>FreeExits;
+		FreeExits.Empty();
+
+		// Only Considering Marks which are either Free or InUse
+		for (auto& Exit : Exits)
+		{
+			if (Exit->CurrentConnectionType.CurrentMarkType == EMarkType::Free || Exit->CurrentConnectionType.CurrentMarkType == EMarkType::InUse)
+			{
+				FreeExits.Add(Exit);
+			}
+		}
+
+		//@todo: Need to Implement a Function which can detect Corners (Since Corner and Hallways both have 2 Exits)
+		// Creating a Tile with the Exact amount of Exits we need
+		ADungeonTile* NewTile = nullptr;
+		if (FreeExits.Num() == 2 && DetectHallway(FreeExits) == true)
+		{
+			int Randompick = FMath::RandRange(0, CornerPieces.Num() - 1);
+			NewTile = CurrentWorld->SpawnActor<ADungeonTile>(CornerPieces[Randompick]);
+			UE_LOG(LogTemp, Warning, TEXT("There Should be Corner now"));
+
+		}
+		else if (FreeExits.Num() == 2 && DetectHallway(FreeExits) == false)
+		{
+			int Randompick = FMath::RandRange(0, HallwaysPieces.Num() - 1);
+			NewTile = CurrentWorld->SpawnActor<ADungeonTile>(HallwaysPieces[Randompick]);
+			UE_LOG(LogTemp, Warning, TEXT("There Should be Hallway now"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("There Should be Anything Else"));
+			NewTile = ReturnTileWithAmountOfExits(CurrentWorld, FreeExits.Num());
+		}
+
+		if (NewTile == nullptr)
+		{
+			return false;
+		}
+
+		NewTile->SetActorLocation(PositionsOfActors[i]);
+
+		// Iterating through to Find a Correct Orientation
+		TArray<UTileMarks*> TempMarkArray;
+		TempMarkArray.Empty();
+		TempMarkArray = NewTile->GetFreeExits();
+
+		FRotator StartRot = FRotator(0, 0, 0);
+		int CorrectMarks;
+
+		for (int j = 0; j < 4; j++)
+		{
+			NewTile->SetActorRotation(StartRot);
+			CorrectMarks = 0;
+
+			for (auto& Mark : TempMarkArray)
+			{
+				for (const auto& Exit : FreeExits)
+				{
+					if (IsWithinDistance(Mark->GetComponentLocation(), Exit->GetComponentLocation()) < 10 && Mark->CurrentConnectionType.CurrentMarkType == EMarkType::Free)
+					{
+						++CorrectMarks;
+					}
+				}
+			}
+			if (CorrectMarks == FreeExits.Num())
+			{
+				break;
+			}
+			else
+			{
+				StartRot = StartRot + FRotator(0, 90, 0);
+			}
+		}
+	}
+
+	for (auto& Actor : ActorsToContinueBranching)
+	{
+		CurrentWorld->DestroyActor(Actor);
+	}
+	ActorsToContinueBranching.Empty();
+	return true;
+
+	}
 
 /*
 	Function to Get Adjecent Free UTileMarks to Consider the Amount of Free Exits we Need in this Specific Spot
@@ -646,7 +790,7 @@ ADungeonTile* ADungeonGenerator::ReturnTileWithAmountOfExits(UWorld* CurrentWorl
 	return NewTile;
 }
 
-void ADungeonGenerator::DEBUGUpdateFixActor()
+void ADungeonGenerator::UpdateFixActor()
 {
 	TArray<ADungeonTile*> PendingFixing;
 
@@ -661,4 +805,24 @@ void ADungeonGenerator::DEBUGUpdateFixActor()
 	}
 
 	GatherActorToFix(PendingFixing);
+}
+
+bool ADungeonGenerator::DetectHallway(TArray<UTileMarks*> NeighborMarks)
+{
+
+	FVector MyTileMarkPos = NeighborMarks[0]->GetComponentLocation();
+	if (IsWithinDistance(NeighborMarks[1]->GetComponentLocation(), MyTileMarkPos ) < 220)
+	{
+		float Debug = IsWithinDistance(NeighborMarks[1]->GetComponentLocation(), MyTileMarkPos);
+		UE_LOG(LogTemp, Warning, TEXT("Distance is %f"), Debug);
+		UE_LOG(LogTemp, Warning, TEXT("Distance is Less than 150"));
+		return true;
+	}
+	else
+	{
+		float Debug = IsWithinDistance(NeighborMarks[1]->GetComponentLocation(), MyTileMarkPos);
+		UE_LOG(LogTemp, Warning, TEXT("Distance is %f"), Debug);
+		UE_LOG(LogTemp, Warning, TEXT("Distance is bigger than 150"));
+		return false;
+	}
 }
