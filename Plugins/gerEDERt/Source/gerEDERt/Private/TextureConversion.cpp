@@ -12,7 +12,7 @@ UTextureConversion::UTextureConversion()
 void UTextureConversion::OpenTreeGraph()
 {
     TSharedRef<SWindow> TreeGraphWindow = SNew(SWindow)
-        .Title(FText::FromString(TEXT("Tree Graph")))
+        .Title(FText::FromString(TEXT("My Big PP")))
         .ClientSize(FVector2D(800, 600))
         [
             SNew(STreeGraphWidget)

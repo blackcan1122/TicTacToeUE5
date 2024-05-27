@@ -63,7 +63,6 @@ void STreeGraphWidget::ConstructTree(TSharedPtr<FTreeNode> Node, float XOffset, 
                 .Position(FVector2D(XOffset, YOffset))
                 .Size(FVector2D(100, 50))
                 [
-                    NodeBox.ToSharedRef();
                     NodeBox.ToSharedRef()
                 ]
         ];
