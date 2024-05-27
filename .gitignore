@@ -12,7 +12,6 @@
 !/plugins/gerEDERt/Content**
 !/plugins/gerEDERt/Source**
 !/plugins/gerEDERt/Resources**
-!/plugins/gerEDERt/Binaries**
 !/plugins/gerEDERt/*
 
 # Only allow .uasset and .umap files from /Content dir.
